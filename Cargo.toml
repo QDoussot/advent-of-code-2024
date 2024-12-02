@@ -3,4 +3,12 @@ name = "advent-of-code-2024"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
+aoc-runner = "0.3.0"
+aoc-runner-derive = "0.3.0"
+derive_more = { version = "1.0.0", features = ["from"] }
+eyre = "0.6.12"
+huparse = { path = "/home/quentin/projects/huparse" }
+itertools = "0.13.0"
