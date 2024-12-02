@@ -2,7 +2,6 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use derive_more::From;
 use eyre::Report;
 
-use eyre::Error;
 use huparse::parse::ParserMapper;
 use huparse::parse::{Parsable, Parse};
 use huparse::parser;

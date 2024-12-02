@@ -27,11 +27,6 @@ impl<'a> Damped<'a> {
         self.iter().tuple_windows().all(|(w0, w1)| predicat(w0, w1))
             && self.has_safe_adjacent_levels()
     }
-
-    pub fn every_possible_dampening(report:&'a PlantReport) -> impl Iterator<Item = Damped<'a>> {
-        (0..report.0.len()).map(move |damped| Damped(&report, damped))
-    }
-
 }
 
 fn find_bad_and_damper(
