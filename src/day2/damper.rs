@@ -53,8 +53,9 @@ fn find_bad_and_damper(
 fn number_of_safe_reports_with_dampener_bis(reports: &Vec<PlantReport>) -> usize {
     reports
         .iter()
-        .filter(|pr| find_bad_and_damper(&pr, |w0, w1| w0 < w1).is_some()
-            || find_bad_and_damper(&pr, |w0, w1| w0 > w1).is_some()
-            )
+        .filter(|pr| {
+            find_bad_and_damper(&pr, |w0, w1| w0 < w1).is_some()
+                || find_bad_and_damper(&pr, |w0, w1| w0 > w1).is_some()
+        })
         .count()
 }

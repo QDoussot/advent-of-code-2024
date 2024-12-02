@@ -39,11 +39,7 @@ fn parse_reports(input: &str) -> Result<Vec<PlantReport>, Report> {
 
 #[aoc(day2, part1)]
 fn number_of_safe_reports(reports: &Vec<PlantReport>) -> usize {
-    reports
-        .iter()
-        .filter(|report| report.is_safe())
-        .count()
+    reports.iter().filter(|report| report.is_safe()).count()
 }
-
 
 mod damper;
