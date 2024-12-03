@@ -7,6 +7,7 @@ use huparse::parse::{Parsable, Parse};
 use huparse::parser;
 
 use itertools::Itertools;
+use crate::relation::*;
 
 #[derive(From)]
 pub struct PlantReport(pub Vec<usize>);
@@ -26,17 +27,6 @@ static INCREASING: Predicate = |(a, b)| a < b;
 static DECREASING: Predicate = |(a, b)| a > b;
 static NEAR: Predicate = |(a, b)| (1..4).contains(&a.abs_diff(*b));
 
-macro_rules! and {
-    ($p1:ident,$p2:ident) => {
-        |(a, b)| $p1((a, b)) && $p2((a, b))
-    };
-}
-macro_rules! not {
-    ($p1:ident) => {
-        |(a, b)| !$p1((a, b))
-    };
-}
-
 struct Raw<'a>(&'a PlantReport);
 
 impl<'a> ReportInterpretation for Raw<'a> {
@@ -46,13 +36,13 @@ impl<'a> ReportInterpretation for Raw<'a> {
 }
 
 trait ReportInterpretationEx: ReportInterpretation {
-    fn check_consecutive(&self, predicate: Predicate) -> bool;
+    fn check_consecutive(&self, predicate: impl Relation<usize>) -> bool;
     fn is_safe(&self) -> bool;
 }
 
 impl<T: ReportInterpretation> ReportInterpretationEx for T {
-    fn check_consecutive(&self, predicate: Predicate) -> bool {
-        self.levels().tuple_windows().all(predicate)
+    fn check_consecutive(&self, predicate: impl Relation<usize>) -> bool {
+        self.levels().tuple_windows().all(predicate.into_fn())
     }
 
     fn is_safe(&self) -> bool {
@@ -92,14 +82,14 @@ impl<'a> ReportInterpretation for Damped<'a> {
     }
 }
 
-fn try_validate(damped: Damped, predicate: Predicate) -> Option<Validation> {
+fn try_validate(damped: Damped, predicate: impl Relation<usize>) -> Option<Validation> {
     damped
         .check_consecutive(predicate)
         .then_some(Validation::Damping(damped.1))
 }
 
-fn find_bad_and_damper(report: &PlantReport, predicate: Predicate) -> Option<Validation> {
-    match report.0.iter().tuple_windows().find_position(not!(predicate)) {
+fn find_bad_and_damper(report: &PlantReport, predicate: impl Relation<usize>) -> Option<Validation> {
+    match report.0.iter().tuple_windows().find_position(not(predicate).into_ref_fn()) {
         None => Some(Validation::Safe),
         Some((pos, _)) => try_validate(Damped(&report, pos), predicate)
             .or_else(|| try_validate(Damped(&report, pos + 1), predicate)),
@@ -111,8 +101,8 @@ fn number_of_dampened_safe_reports(reports: &Vec<PlantReport>) -> usize {
     reports
         .iter()
         .filter(|report| {
-            find_bad_and_damper(&report, and!(INCREASING, NEAR)).is_some()
-                || find_bad_and_damper(&report, and!(DECREASING, NEAR)).is_some()
+            find_bad_and_damper(&report, and(INCREASING, NEAR)).is_some()
+                || find_bad_and_damper(&report, and(DECREASING, NEAR)).is_some()
         })
         .count()
 }
