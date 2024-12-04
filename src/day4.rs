@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use crate::coord_iter::coords_along;
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -34,24 +36,15 @@ fn print(array: &Vec<Vec<char>>) {
     })
 }
 
-fn find_string(
-    array: &Vec<Vec<char>>,
-    s: &str,
-    x: usize,
-    y: usize,
-    delta_x: isize,
-    delta_y: isize,
-) -> bool {
-    let coords = coords_along(
-        (x, y),
-        (delta_x, delta_y),
-        s.len(),
-        (array[0].len(), array.len()),
-    );
-    coords.len() == s.len() &&
-        coords
-    .zip(s.chars())
-    .all(|(coord, value)| array[coord.1][coord.0] == value)
+type Coord = (usize, usize);
+type Delta = (isize, isize);
+
+fn find_string(array: &Vec<Vec<char>>, s: &str, coords: Coord, delta: impl Borrow<Delta>) -> bool {
+    let coords = coords_along(coords, delta, s.len(), (array[0].len(), array.len()));
+    coords.len() == s.len()
+        && coords
+            .zip(s.chars())
+            .all(|(coord, value)| array[coord.1][coord.0] == value)
 }
 
 #[aoc(day4, part1)]
@@ -59,50 +52,43 @@ fn solve(input: &ParsedInput) -> Result<usize, String> {
     let h = input.len();
     let w = input[0].len();
 
+    let dir: Vec<(isize, isize)> = vec![
+        (0, 1),
+        (1, 1),
+        (1, 0),
+        (1, -1),
+        (0, -1),
+        (-1, -1),
+        (-1, 0),
+        (-1, 1),
+    ];
+
     let search = "XMAS";
     let mut occurence = 0;
     for y in 0..h {
         for x in 0..w {
-            let dir: Vec<(isize, isize)> = vec![
-                (0, 1),
-                (1, 1),
-                (1, 0),
-                (1, -1),
-                (0, -1),
-                (-1, -1),
-                (-1, 0),
-                (-1, 1),
-            ];
-
             occurence += dir
                 .iter()
-                .filter(|(dx, dy)| find_string(&input, &search, x , y , *dx, *dy))
+                .filter(|delta| find_string(&input, &search, (x, y), *delta))
                 .count();
         }
     }
     Ok(occurence)
 }
 
-fn cross_mas(array: &Vec<Vec<char>>, x: usize, y: usize, delta_x: isize, delta_y: isize) -> bool {
-    if delta_y != 0 {
-        let (dx1, dx2) = (1, -1);
-        let (dy1, dy2) = (delta_y, delta_y);
+static RIGHT_UP: Delta = (1, 1);
+static LEFT_UP: Delta = (-1, 1);
+static LEFT_DOWN: Delta = (-1, -1);
+static RIGHT_DOWN: Delta = (1, -1);
 
-        return find_string(array, "AM", x, y, dx1, dy1)
-            && find_string(array, "AM", x, y, dx2, dy2)
-            && find_string(array, "AS", x, y, dx1, -dy1)
-            && find_string(array, "AS", x, y, dx2, -dy2);
-    } else if delta_x != 0 {
-        let (dx1, dx2) = (delta_x, delta_x);
-        let (dy1, dy2) = (1, -1);
+static DIAG_VALUES: [&'static str; 4] = ["AM", "AM", "AS", "AS"];
+static CONSECUTIVE_DIAGS: [Delta; 4] = [RIGHT_UP, LEFT_UP, LEFT_DOWN, RIGHT_DOWN];
 
-        return find_string(array, "AM", x, y, dx1, dy1)
-            && find_string(array, "AM", x, y, dx2, dy2)
-            && find_string(array, "AS", x, y, -dx1, dy1)
-            && find_string(array, "AS", x, y, -dx2, dy2);
-    } else {
-        return false;
-    }
+fn cross_mas(array: &Vec<Vec<char>>, coords: Coord, first_mas_ind: usize) -> bool {
+    (0..4)
+        .map(|i| CONSECUTIVE_DIAGS[(i + first_mas_ind) % 4]) // Modulo magic to cycle through diagonals
+        .zip(DIAG_VALUES.iter())
+        .all(|(diag, value)| find_string(array, value, coords, diag))
 }
 
 #[aoc(day4, part2)]
@@ -113,11 +99,8 @@ fn count_cross_mas(input: &ParsedInput) -> Result<usize, String> {
     let mut occurence = 0;
     for y in 0..h {
         for x in 0..w {
-            let dir: Vec<(isize, isize)> = vec![(0, -1), (-1, 0), (0, 1), (1, 0)];
-
-            occurence += dir
-                .iter()
-                .filter(|(dx, dy)| cross_mas(&input, x , y , *dx, *dy))
+            occurence += (0..4)
+                .filter(|starting_diag| cross_mas(&input, (x, y), *starting_diag))
                 .count();
         }
     }
