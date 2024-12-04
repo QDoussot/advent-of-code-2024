@@ -43,15 +43,15 @@ fn find_string(
     delta_y: isize,
 ) -> bool {
     let coords = coords_along(
-        [x, y],
-        [delta_x, delta_y],
+        (x, y),
+        (delta_x, delta_y),
         s.len(),
-        [array[0].len(), array.len()],
+        (array[0].len(), array.len()),
     );
     coords.len() == s.len() &&
         coords
     .zip(s.chars())
-    .all(|(coord, value)| array[coord[1]][coord[0]] == value)
+    .all(|(coord, value)| array[coord.1][coord.0] == value)
 }
 
 #[aoc(day4, part1)]
