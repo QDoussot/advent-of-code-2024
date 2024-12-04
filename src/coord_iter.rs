@@ -1,16 +1,5 @@
 use std::borrow::Borrow;
 use std::cmp::{min, Ordering};
-use std::iter;
-
-struct CoordIter {
-    x: usize,
-    y: usize,
-    x_max: usize,
-    y_max: usize,
-
-    delta_x: isize,
-    delta_y: isize,
-}
 
 type Coord = (usize,usize);
 type Delta = (isize,isize);
@@ -55,13 +44,4 @@ pub fn coords_along(
             )
         })
         .into_iter()
-}
-
-
-impl Iterator for CoordIter {
-    type Item = (usize, usize);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        todo!()
-    }
 }
