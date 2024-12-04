@@ -37,10 +37,11 @@ fn safe_steps(coord: usize, delta: isize, steps: usize, max: usize) -> usize {
 
 pub fn coords_along(
     coord: Coord,
-    delta: Delta,
+    delta: impl Borrow<Delta>,
     steps: usize,
     max: Coord,
 ) -> impl ExactSizeIterator<Item = Coord> {
+    let delta = *delta.borrow();
     let capped_steps = std::cmp::min(
         safe_steps(coord.0, delta.0, steps, max.0),
         safe_steps(coord.1, delta.1, steps, max.1),
