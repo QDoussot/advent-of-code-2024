@@ -1,3 +1,4 @@
+use crate::coord_iter::coords_along;
 use aoc_runner_derive::{aoc, aoc_generator};
 
 type ParsedInput = Vec<Vec<char>>;
@@ -36,24 +37,22 @@ fn print(array: &Vec<Vec<char>>) {
 fn find_string(
     array: &Vec<Vec<char>>,
     s: &str,
-    x: isize,
-    y: isize,
+    x: usize,
+    y: usize,
     delta_x: isize,
     delta_y: isize,
 ) -> bool {
-    (0isize..(array[0].len() as isize)).contains(&(x + delta_x * (s.len() - 1) as isize))
-        && (0isize..(array.len() as isize)).contains(&(y + delta_y * (s.len() - 1) as isize))
-        && s.chars()
-            .enumerate()
-            .filter(|(i, c)| {
-                array[(y + delta_y * (*i as isize)) as usize]
-                    [(x + delta_x * (*i as isize)) as usize]
-                    == *c
-            })
-            .count()
-            == s.len()
+    let coords = coords_along(
+        [x, y],
+        [delta_x, delta_y],
+        s.len(),
+        [array[0].len(), array.len()],
+    );
+    coords.len() == s.len() &&
+        coords
+    .zip(s.chars())
+    .all(|(coord, value)| array[coord[1]][coord[0]] == value)
 }
-
 
 #[aoc(day4, part1)]
 fn solve(input: &ParsedInput) -> Result<usize, String> {
@@ -77,20 +76,14 @@ fn solve(input: &ParsedInput) -> Result<usize, String> {
 
             occurence += dir
                 .iter()
-                .filter(|(dx, dy)| find_string(&input, &search, x as isize, y as isize, *dx, *dy))
+                .filter(|(dx, dy)| find_string(&input, &search, x , y , *dx, *dy))
                 .count();
         }
     }
     Ok(occurence)
 }
 
-fn cross_mas(
-    array: &Vec<Vec<char>>,
-    x: isize,
-    y: isize,
-    delta_x: isize,
-    delta_y: isize,
-) -> bool {
+fn cross_mas(array: &Vec<Vec<char>>, x: usize, y: usize, delta_x: isize, delta_y: isize) -> bool {
     if delta_y != 0 {
         let (dx1, dx2) = (1, -1);
         let (dy1, dy2) = (delta_y, delta_y);
@@ -112,7 +105,6 @@ fn cross_mas(
     }
 }
 
-
 #[aoc(day4, part2)]
 fn count_cross_mas(input: &ParsedInput) -> Result<usize, String> {
     let h = input.len();
@@ -125,7 +117,7 @@ fn count_cross_mas(input: &ParsedInput) -> Result<usize, String> {
 
             occurence += dir
                 .iter()
-                .filter(|(dx, dy)| cross_mas(&input,  x as isize, y as isize, *dx, *dy))
+                .filter(|(dx, dy)| cross_mas(&input, x , y , *dx, *dy))
                 .count();
         }
     }
