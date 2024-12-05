@@ -37,12 +37,14 @@ fn verify_order_constraint(pages: &[usize], order_constraint: &HashMap<usize, Ve
 fn solve(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
     let expected_order = constraint.into_iter().cloned().into_group_map();
-    let mut sum = 0;
-    prints.iter().for_each(|pages| {
-        if verify_order_constraint(pages, &expected_order) {
-            sum += pages[pages.len() / 2];
-        }
-    });
+    let sum = prints
+        .iter()
+        .filter_map(|pages| {
+            verify_order_constraint(pages, &expected_order)
+                .then_some(pages.get(pages.len() / 2))
+                .flatten()
+        })
+        .sum();
     Ok(sum)
 }
 
@@ -50,20 +52,24 @@ fn solve(input: &ParsedInput) -> Result<usize, String> {
 fn solve_incorrect(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
     let expected_order = constraint.into_iter().cloned().into_group_map();
-    let mut sum = 0;
-    prints.iter().for_each(|pages| {
-        if !verify_order_constraint(pages, &expected_order) {
-            let mut sorted = pages.iter().sorted_by(|lhs, rhs| {
-                if expected_order.get(lhs).unwrap_or(&vec![]).contains(rhs) {
-                    Ordering::Less
-                } else if expected_order.get(rhs).unwrap_or(&vec![]).contains(lhs) {
-                    Ordering::Greater
-                } else {
-                    Ordering::Equal
-                }
-            });
-            sum += sorted.nth(pages.len() / 2).unwrap();
-        }
-    });
+    let sum = prints
+        .iter()
+        .filter_map(|pages| {
+            (!verify_order_constraint(pages, &expected_order))
+                .then_some({
+                    let mut sorted = pages.iter().sorted_by(|lhs, rhs| {
+                        if expected_order.get(lhs).unwrap_or(&vec![]).contains(rhs) {
+                            Ordering::Less
+                        } else if expected_order.get(rhs).unwrap_or(&vec![]).contains(lhs) {
+                            Ordering::Greater
+                        } else {
+                            Ordering::Equal
+                        }
+                    });
+                    sorted.nth(pages.len() / 2)
+                })
+                .flatten()
+        })
+        .sum();
     Ok(sum)
 }
