@@ -8,16 +8,24 @@ use huparse::parse::Parse;
 use huparse::parser;
 use itertools::Itertools;
 
-type ParsedInput = (Vec<(usize, usize)>, Vec<Vec<usize>>);
+type ParsedInput = (OrderConstraint, Vec<Vec<usize>>);
 
-#[aoc_generator(day5)]
-fn parse_whatever(input: &str) -> Result<ParsedInput, Report> {
-    let parser = parser!((
-        "%\n\n%",
-        [("%|%", usize, usize) | "\n"],
-        [[usize | ","] | "\n"]
-    ));
-    parser.parse_top(input)
+struct OrderConstraint(HashMap<usize, Vec<usize>>);
+
+impl OrderConstraint {
+    fn verified_in(&self, print: &[usize]) -> bool {
+        verify_order_constraint(print, &self.0)
+    }
+
+    fn order(&self, page_a: &usize, page_b: &usize) -> Ordering {
+        if self.0.get(page_a).unwrap_or(&vec![]).contains(page_b) {
+            Ordering::Less
+        } else if self.0.get(page_b).unwrap_or(&vec![]).contains(page_a) {
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+    }
 }
 
 fn verify_order_constraint(pages: &[usize], order_constraint: &HashMap<usize, Vec<usize>>) -> bool {
@@ -33,14 +41,29 @@ fn verify_order_constraint(pages: &[usize], order_constraint: &HashMap<usize, Ve
     })
 }
 
+#[aoc_generator(day5)]
+fn parse_whatever(input: &str) -> Result<ParsedInput, Report> {
+    let parser = parser!((
+        "%\n\n%",
+        [("%|%", usize, usize) | "\n"],
+        [[usize | ","] | "\n"]
+    ));
+    parser.parse_top(input).map(|(constraints, prints)| {
+        (
+            OrderConstraint(constraints.into_iter().into_group_map()),
+            prints,
+        )
+    })
+}
+
 #[aoc(day5, part1)]
 fn solve(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
-    let expected_order = constraint.into_iter().cloned().into_group_map();
     let sum = prints
         .iter()
         .filter_map(|pages| {
-            verify_order_constraint(pages, &expected_order)
+            constraint
+                .verified_in(pages)
                 .then_some(pages.get(pages.len() / 2))
                 .flatten()
         })
@@ -51,23 +74,16 @@ fn solve(input: &ParsedInput) -> Result<usize, String> {
 #[aoc(day5, part2)]
 fn solve_incorrect(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
-    let expected_order = constraint.into_iter().cloned().into_group_map();
     let sum = prints
         .iter()
         .filter_map(|pages| {
-            (!verify_order_constraint(pages, &expected_order))
-                .then_some({
-                    let mut sorted = pages.iter().sorted_by(|lhs, rhs| {
-                        if expected_order.get(lhs).unwrap_or(&vec![]).contains(rhs) {
-                            Ordering::Less
-                        } else if expected_order.get(rhs).unwrap_or(&vec![]).contains(lhs) {
-                            Ordering::Greater
-                        } else {
-                            Ordering::Equal
-                        }
-                    });
-                    sorted.nth(pages.len() / 2)
-                })
+            (!constraint.verified_in(pages))
+                .then_some(
+                    pages
+                        .iter()
+                        .sorted_by(|lhs, rhs| constraint.order(lhs, rhs))
+                        .nth(pages.len() / 2),
+                )
                 .flatten()
         })
         .sum();
