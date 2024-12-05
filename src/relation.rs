@@ -45,6 +45,7 @@ impl<T, R1: Relation<T>, R2: Relation<T>> Relation<T> for OrRelation<T, R1, R2> 
     }
 }
 
+#[allow(dead_code)]
 pub fn or<T, R1: Relation<T>, R2: Relation<T>>(r1: R1, r2: R2) -> OrRelation<T, R1, R2> {
     OrRelation(r1, r2, PhantomData::default())
 }
