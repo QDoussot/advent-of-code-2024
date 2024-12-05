@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::collections::HashMap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use eyre::Report;
@@ -19,16 +20,25 @@ fn parse_whatever(input: &str) -> Result<ParsedInput, Report> {
     parser.parse_top(input)
 }
 
+fn verify_order_constraint(pages: &[usize], expected_order: &HashMap<usize, Vec<usize>>) -> bool {
+    (0..pages.len()).all(|page_nbr| {
+        let mut before = pages.iter().take(page_nbr);
+        before.all(|b| {
+            !expected_order
+                .get(&pages[page_nbr])
+                .unwrap_or(&vec![])
+                .contains(b)
+        })
+    })
+}
+
 #[aoc(day5, part1)]
 fn solve(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
     let expected_order = constraint.into_iter().cloned().into_group_map();
     let mut sum = 0;
     prints.iter().for_each(|pages| {
-        if (0..pages.len()).all(|page_nbr| {
-            let mut before = pages.iter().take(page_nbr);
-            before.all(|b| !expected_order.get(&pages[page_nbr]).unwrap_or(&vec![]).contains(b))
-        }) {
+        if verify_order_constraint(pages, &expected_order) {
             sum += pages[pages.len() / 2];
         }
     });
@@ -41,20 +51,16 @@ fn solve_incorrect(input: &ParsedInput) -> Result<usize, String> {
     let expected_order = constraint.into_iter().cloned().into_group_map();
     let mut sum = 0;
     prints.iter().for_each(|pages| {
-        if (0..pages.len()).find(|page_nbr| {
-            let mut before = pages.iter().take(*page_nbr);
-            before.any(|b| expected_order.get(&pages[*page_nbr]).unwrap_or(&vec![]).contains(b))
-        }).is_some() {
-            let mut sorted = pages.iter().sorted_by(|lhs,rhs|
+        if !verify_order_constraint(pages, &expected_order) {
+            let mut sorted = pages.iter().sorted_by(|lhs, rhs| {
                 if expected_order.get(lhs).unwrap_or(&vec![]).contains(rhs) {
                     Ordering::Less
-                }
-                else if expected_order.get(rhs).unwrap_or(&vec![]).contains(lhs) {
+                } else if expected_order.get(rhs).unwrap_or(&vec![]).contains(lhs) {
                     Ordering::Greater
-                }
-                else {
+                } else {
                     Ordering::Equal
-                });
+                }
+            });
             sum += sorted.nth(pages.len() / 2).unwrap();
         }
     });
