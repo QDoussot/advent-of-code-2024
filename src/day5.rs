@@ -20,14 +20,15 @@ fn parse_whatever(input: &str) -> Result<ParsedInput, Report> {
     parser.parse_top(input)
 }
 
-fn verify_order_constraint(pages: &[usize], expected_order: &HashMap<usize, Vec<usize>>) -> bool {
-    (0..pages.len()).all(|page_nbr| {
-        let mut before = pages.iter().take(page_nbr);
-        before.all(|b| {
-            !expected_order
-                .get(&pages[page_nbr])
+fn verify_order_constraint(pages: &[usize], order_constraint: &HashMap<usize, Vec<usize>>) -> bool {
+    pages.iter().enumerate().all(|(page_nbr, page)| {
+        let before = &pages[..page_nbr];
+        // Check that every page found before isn't expected "to be found after if found"
+        before.iter().all(|page_found_before| {
+            !order_constraint
+                .get(page)
                 .unwrap_or(&vec![])
-                .contains(b)
+                .contains(page_found_before)
         })
     })
 }
