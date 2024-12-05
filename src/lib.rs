@@ -4,6 +4,7 @@ mod day3;
 mod relation;
 mod day4;
 mod coord_iter;
+mod day5;
 
 use aoc_runner_derive::aoc_main;
 
