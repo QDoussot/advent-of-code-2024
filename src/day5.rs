@@ -76,15 +76,13 @@ fn solve_incorrect(input: &ParsedInput) -> Result<usize, String> {
     let (constraint, prints) = input;
     let sum = prints
         .iter()
-        .filter_map(|pages| {
-            (!constraint.verified_in(pages))
-                .then_some(
-                    pages
-                        .iter()
-                        .sorted_by(|lhs, rhs| constraint.order(lhs, rhs))
-                        .nth(pages.len() / 2),
-                )
-                .flatten()
+        .filter(|pages| (!constraint.verified_in(pages)))
+        .map(|pages| {
+            pages
+                .iter()
+                .sorted_by(|lhs, rhs| constraint.order(lhs, rhs))
+                .nth(pages.len() / 2)
+                .unwrap_or(&0)
         })
         .sum();
     Ok(sum)
