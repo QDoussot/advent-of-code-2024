@@ -86,10 +86,20 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
     ))
 }
 
+#[derive(Debug,Clone)]
 struct GuardPatrol {
     // Set of positions visited with each direction of guard while visiting each of them
     visited: HashSet<(Coord, Direction)>,
     is_looping: bool,
+}
+
+impl GuardPatrol {
+    fn into_visited_position(self) -> impl Iterator<Item = Coord> {
+        self.visited
+            .into_iter()
+            .unique_by(|(coord, _)| *coord)
+            .map(|(coord, _)| coord)
+    }
 }
 
 fn run_guard(
@@ -122,9 +132,7 @@ fn run_guard(
 fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
     if let (map, size, Some(guard)) = map.clone() {
         Ok(run_guard(&map, &size, guard)
-            .visited
-            .iter()
-            .unique_by(|(coord, _)| coord)
+            .into_visited_position()
             .count())
     } else {
         Ok(0)
