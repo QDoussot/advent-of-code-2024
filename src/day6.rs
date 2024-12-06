@@ -7,7 +7,7 @@ use huparse::parse::Parse;
 use huparse::parser;
 use itertools::{Either, Itertools};
 
-type Coord = (isize, isize);
+use crate::space2d::{Coord, Direction,moved};
 
 type ParsedInput = (HashSet<Coord>, (isize, isize), Option<(Coord, Direction)>);
 
@@ -18,36 +18,6 @@ enum Item {
     Obstacle,
     Guard(Direction),
 }
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-enum Direction {
-    Up,
-    Ri,
-    Do,
-    Le,
-}
-
-fn moved(pos: &Coord, dir: &Direction) -> Coord {
-    match dir {
-        Direction::Up => (pos.0, pos.1 - 1),
-        Direction::Ri => (pos.0 + 1, pos.1),
-        Direction::Do => (pos.0, pos.1 + 1),
-        Direction::Le => (pos.0 - 1, pos.1),
-    }
-}
-
-impl Direction {
-    fn rotate(self) -> Direction {
-        match self {
-            Direction::Up => Direction::Ri,
-            Direction::Ri => Direction::Do,
-            Direction::Do => Direction::Le,
-            Direction::Le => Direction::Up,
-        }
-    }
-}
-
-static CLOCKWISE: [Direction; 4] = [Direction::Up, Direction::Ri, Direction::Do, Direction::Le];
 
 #[aoc_generator(day6)]
 fn parse_day6(input: &str) -> Result<ParsedInput, Report> {

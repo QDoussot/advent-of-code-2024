@@ -9,6 +9,7 @@ mod coord_iter;
 mod day5;
 
 mod day6;
+mod space2d;
 
 use aoc_runner_derive::aoc_main;
 
