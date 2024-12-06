@@ -108,8 +108,8 @@ fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
 
 fn looping(
     obstacles: &HashSet<Coord>,
-    size: Coord,
-    (mut guard_pos, mut guard_dir): (Coord, Direction),
+    size: &Coord,
+    (mut guard_pos, mut guard_dir): &(Coord, Direction),
 ) -> bool {
     let mut visited = HashSet::<(Coord, Direction)>::new();
     let mut looped = false;
@@ -131,17 +131,17 @@ fn looping(
 
 #[aoc(day6, part2)]
 fn solve_part2(map: &ParsedInput) -> Result<usize, String> {
-    if let (mut obstacles, size, Some((mut guard_pos, mut guard_dir))) = map.clone() {
-        Ok((0..size.0 as isize)
+    if let (mut obstacles, size, Some(guard)) = map.clone() {
+            Ok((0..size.0 as isize)
             .cartesian_product(0..size.1 as isize)
             .filter(|coord| {
                 if !obstacles.contains(coord) {
                     obstacles.insert(*coord);
-                    let does_loop = looping(&obstacles, size, (guard_pos, guard_dir));
+                    let does_loop = looping(&obstacles, &size, &guard);
                     obstacles.remove(coord);
                     does_loop
                 } else {
-                    looping(&obstacles, size, (guard_pos, guard_dir))
+                    looping(&obstacles, &size, &guard)
                 }
             })
             .count())
