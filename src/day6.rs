@@ -86,37 +86,24 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
     ))
 }
 
-#[aoc(day6, part1)]
-fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
-    let mut visited = HashSet::<Coord>::new();
-    if let (map, size, Some((mut guard_pos, mut guard_dir))) = map {
-        while (0isize..(size.0) as isize).contains(&guard_pos.0)
-            && (0isize..size.1 as isize).contains(&guard_pos.1)
-        {
-            visited.insert(guard_pos);
-            let new_guard_pos = moved(&guard_pos, &guard_dir);
-            if map.contains(&new_guard_pos) {
-                guard_dir = guard_dir.rotate()
-            } else {
-                guard_pos = new_guard_pos;
-            }
-        }
-    }
-    Ok(visited.len())
+struct GuardPatrol {
+    // Set of positions visited with each direction of guard while visiting each of them
+    visited: HashSet<(Coord, Direction)>,
+    is_looping: bool,
 }
 
-fn looping(
+fn run_guard(
     obstacles: &HashSet<Coord>,
     size: &Coord,
-    (mut guard_pos, mut guard_dir): &(Coord, Direction),
-) -> bool {
+    (mut guard_pos, mut guard_dir): (Coord, Direction),
+) -> GuardPatrol {
     let mut visited = HashSet::<(Coord, Direction)>::new();
-    let mut looped = false;
+    let mut is_looping = false;
     while (0isize..(size.0) as isize).contains(&guard_pos.0)
         && (0isize..size.1 as isize).contains(&guard_pos.1)
-        && !looped
+        && !is_looping
     {
-        looped = !visited.insert((guard_pos, guard_dir));
+        is_looping = !visited.insert((guard_pos, guard_dir));
         let new_guard_pos = moved(&guard_pos, &guard_dir);
         if obstacles.contains(&new_guard_pos) {
             guard_dir = guard_dir.rotate()
@@ -125,22 +112,38 @@ fn looping(
         }
     }
 
-    looped
+    GuardPatrol {
+        visited,
+        is_looping,
+    }
+}
+
+#[aoc(day6, part1)]
+fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
+    if let (map, size, Some(guard)) = map.clone() {
+        Ok(run_guard(&map, &size, guard)
+            .visited
+            .iter()
+            .unique_by(|(coord, _)| coord)
+            .count())
+    } else {
+        Ok(0)
+    }
 }
 
 #[aoc(day6, part2)]
 fn solve_part2(map: &ParsedInput) -> Result<usize, String> {
     if let (mut obstacles, size, Some(guard)) = map.clone() {
-            Ok((0..size.0 as isize)
+        Ok((0..size.0 as isize)
             .cartesian_product(0..size.1 as isize)
             .filter(|coord| {
                 if !obstacles.contains(coord) {
                     obstacles.insert(*coord);
-                    let does_loop = looping(&obstacles, &size, &guard);
+                    let GuardPatrol { is_looping, .. } = run_guard(&obstacles, &size, guard);
                     obstacles.remove(coord);
-                    does_loop
+                    is_looping
                 } else {
-                    looping(&obstacles, &size, &guard)
+                    run_guard(&obstacles, &size, guard).is_looping
                 }
             })
             .count())
@@ -148,4 +151,3 @@ fn solve_part2(map: &ParsedInput) -> Result<usize, String> {
         Ok(0)
     }
 }
-
