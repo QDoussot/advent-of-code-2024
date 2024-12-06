@@ -142,7 +142,9 @@ fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
 #[aoc(day6, part2)]
 fn solve_part2(map: &ParsedInput) -> Result<usize, String> {
     if let (mut obstacles, size, Some(guard)) = map.clone() {
-        let visited = run_guard(&obstacles, &size, guard).into_visited_position();
+        let visited = run_guard(&obstacles, &size, guard)
+            .into_visited_position()
+            .skip(1); // We can't put the obstacle at the guard first position
         Ok(visited
             .filter(|coord| {
                 if !obstacles.contains(coord) {
