@@ -54,7 +54,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
     let lines = input.lines().collect::<Vec<_>>();
     let w = lines[0].len();
     let h = lines.len();
-    let ground = input
+    let map = input
         .lines()
         .enumerate()
         .map(|(y, line)| {
@@ -73,7 +73,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
         .flatten()
         .collect::<Vec<_>>();
 
-    let ground: (Vec<_>, Vec<_>) = ground
+    let (ground, mut guard): (Vec<_>, Vec<_>) = map
         .into_iter()
         .partition_map(|(coord, item)| match item {
             Item::Obstacle => Either::Left(coord),
@@ -81,9 +81,9 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
         });
 
     Ok((
-        ground.0.into_iter().collect(),
+        ground.into_iter().collect(),
         (w as isize, h as isize),
-        ground.1.first().copied(),
+       guard.pop(),
     ))
 }
 
