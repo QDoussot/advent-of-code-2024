@@ -10,6 +10,7 @@ mod day5;
 
 mod day6;
 mod space2d;
+mod functional;
 
 mod day07;
 pub mod tree_reduce;
