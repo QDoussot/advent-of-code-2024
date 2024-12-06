@@ -1,13 +1,11 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use eyre::Report;
 
-use huparse::parse::Parse;
-use huparse::parser;
 use itertools::{Either, Itertools};
 
-use crate::space2d::{Coord, Direction,moved};
+use crate::space2d::{moved, Coord, Direction};
 
 type ParsedInput = (HashSet<Coord>, (isize, isize), Option<(Coord, Direction)>);
 
@@ -56,7 +54,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
     ))
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 struct GuardPatrol {
     // Set of positions visited with each direction of guard while visiting each of them
     visited: HashSet<(Coord, Direction)>,
