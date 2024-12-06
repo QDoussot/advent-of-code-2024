@@ -73,9 +73,8 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
         .flatten()
         .collect::<Vec<_>>();
 
-    let (ground, mut guard): (Vec<_>, Vec<_>) = map
-        .into_iter()
-        .partition_map(|(coord, item)| match item {
+    let (ground, mut guard): (Vec<_>, Vec<_>) =
+        map.into_iter().partition_map(|(coord, item)| match item {
             Item::Obstacle => Either::Left(coord),
             Item::Guard(d) => Either::Right((coord, d)),
         });
@@ -83,7 +82,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
     Ok((
         ground.into_iter().collect(),
         (w as isize, h as isize),
-       guard.pop(),
+        guard.pop(),
     ))
 }
 
