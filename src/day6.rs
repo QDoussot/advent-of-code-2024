@@ -142,8 +142,8 @@ fn solve_part1(map: &ParsedInput) -> Result<usize, String> {
 #[aoc(day6, part2)]
 fn solve_part2(map: &ParsedInput) -> Result<usize, String> {
     if let (mut obstacles, size, Some(guard)) = map.clone() {
-        Ok((0..size.0 as isize)
-            .cartesian_product(0..size.1 as isize)
+        let visited = run_guard(&obstacles, &size, guard).into_visited_position();
+        Ok(visited
             .filter(|coord| {
                 if !obstacles.contains(coord) {
                     obstacles.insert(*coord);
