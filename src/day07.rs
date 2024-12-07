@@ -22,7 +22,6 @@ fn count_posible_solution(target: usize, current_value: usize, remaning: &[usize
     } else {
         let add_possible = if current_value + remaning[0] <= target {
             let add = current_value + remaning[0];
-            println!("target {target}, curr: {current_value} add: {add}");
             count_posible_solution(target, add, &remaning[1..])
         } else {
             0
@@ -30,7 +29,6 @@ fn count_posible_solution(target: usize, current_value: usize, remaning: &[usize
 
         let mul_possible = if current_value * remaning[0] <= target {
             let mul = current_value * remaning[0];
-            println!("target {target}, curr: {current_value} mul: {mul}");
             count_posible_solution(target, mul, &remaning[1..])
         } else {
             0
@@ -58,7 +56,6 @@ fn count_posible_solution_bis(
 ) -> usize {
     if remaning.len() == 0 {
         if current_value == target {
-            //println!("{target}: {op}");
             return 1;
         } else {
             return 0;
