@@ -5,7 +5,9 @@ use huparse::parse::Parse;
 use huparse::parser;
 use itertools::Itertools;
 
-use crate::tree_reduce::{tree_reduce, TreeElement, TreeReduce, TreeReduceCompute};
+use crate::tree_reduce::{
+    tree_reduce, TreeElement, TreeReduce, TreeReduceCompute, TreeReduceDebug,
+};
 
 type ParsedInput = Vec<(usize, Vec<usize>)>;
 
@@ -79,7 +81,7 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
     Ok(possible)
 }
 
-//-------------------- SOLUTION WITH LAMBDAS -------------------- 
+//-------------------- SOLUTION WITH LAMBDAS --------------------
 fn can_be_satisfied_lambda_version(
     target: usize,
     number_list: &[usize],
@@ -119,7 +121,7 @@ fn solve_part2_lambda_version(input: &ParsedInput) -> Result<usize, String> {
     Ok(calibration_result)
 }
 
-//-------------------- SOLUTION WITH TRAIT -------------------- 
+//-------------------- SOLUTION WITH TRAIT --------------------
 struct EquationSolver<'a> {
     target: usize,
     numbers: &'a [usize],
