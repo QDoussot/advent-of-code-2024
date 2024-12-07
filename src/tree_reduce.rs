@@ -25,6 +25,10 @@ pub trait TreeReduceCompute<N, T>: TreeReduce<N, T> {
 
 impl<N, T, TR> TreeReduceCompute<N, T> for TR where TR: TreeReduce<N, T> {}
 
+/// * `child_generator` Lambda taking two arguments: current depth and a reference on current node, and should generate childs
+/// * `collapse` Lambda transforming a node without child into its collapsed value
+/// * `reduce` Lambda taking an boxed iterator on values of collapsed childs, and generate a
+/// reduced value of it
 pub fn tree_reduce<'a, N, G, V, C, R>(
     node: N,
     depth: usize,
@@ -49,5 +53,66 @@ where
             }
             TreeElement::Collapsed(value) => value,
         })))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::{tree_reduce, TreeElement};
+    #[test]
+    fn it_follow_tree_and_reduce() {
+        //   0
+        //   1      2
+        //   3  4   5   6
+        //      7   8 9
+        let tree: Vec<Vec<usize>> = vec![
+            /* 0 */ vec![1, 2],
+            /* 1 */ vec![3, 4],
+            /* 2 */ vec![5, 6],
+            /* 3 */ vec![],
+            /* 4 */ vec![7],
+            /* 5 */ vec![8, 9],
+            /* 6 */ vec![],
+            /* 7 */ vec![],
+            /* 8 */ vec![],
+            /* 9 */ vec![],
+        ];
+
+        // return a vector of the leafs
+        let leafs: Vec<_> = tree_reduce(
+            &0,
+            1,
+            &|_, node| {
+                tree.get(**node)
+                    .unwrap()
+                    .iter()
+                    .map(|child| TreeElement::Node(child))
+                    .collect()
+            },
+            &|node| vec![*node],
+            &|it| it.flatten().collect::<Vec<_>>(),
+        );
+        assert_eq!(leafs, vec![&3, &7, &8, &9, &6]);
+
+        // Just generate the path through the leafs
+        let paths: Vec<Vec<_>> = tree_reduce(
+            vec![0],
+            1,
+            &|_, node| {
+                tree.get(*node.last().unwrap())
+                    .unwrap()
+                    .iter()
+                    .map(|child| {
+                        let mut node = node.clone();
+                        node.push(*child);
+                        TreeElement::Node(node)
+                    })
+                    .collect()
+            },
+            &|node| vec![node.clone()],
+            &|it| it.flatten().collect::<Vec<_>>(),
+        );
+        println!("{paths:?}");
     }
 }
