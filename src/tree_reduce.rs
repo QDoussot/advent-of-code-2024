@@ -33,11 +33,11 @@ pub fn tree_reduce<'a, N, G, V, C, R>(
     reduce: &'a R,
 ) -> V
 where
-    N: 'static,
+    N: 'a,
+    V: 'a,
     G: Fn(usize, &N) -> Vec<TreeElement<N, V>>, // Generate
     C: Fn(&N) -> V,                             // Collapse
     R: Fn(Box<dyn Iterator<Item = V> + 'a>) -> V, // Reduce
-    V: 'static,                                 // V
 {
     let childs = child_generator(depth, &node);
     if childs.is_empty() {
