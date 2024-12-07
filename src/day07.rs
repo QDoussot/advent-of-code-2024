@@ -4,7 +4,7 @@ use eyre::Report;
 use huparse::parse::Parse;
 use huparse::parser;
 
-type ParsedInput = (Vec<(usize, Vec<usize>)>);
+type ParsedInput = Vec<(usize, Vec<usize>)>;
 
 #[aoc_generator(day7)]
 fn parse_day7(input: &str) -> Result<ParsedInput, Report> {
@@ -47,7 +47,7 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
         .map(|equation| equation.0)
         .sum();
 
-    Ok((possible))
+    Ok(possible)
 }
 
 fn count_posible_solution_bis(
@@ -124,5 +124,5 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         .map(|equation| equation.0)
         .sum();
 
-    Ok((possible))
+    Ok(possible)
 }
