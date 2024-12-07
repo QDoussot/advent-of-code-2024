@@ -1,3 +1,8 @@
+use std::{
+    fmt::{Debug, Display},
+    iter,
+};
+
 pub enum TreeElement<N, T> {
     Node(N),
     Collapsed(T),
@@ -7,6 +12,30 @@ pub trait TreeReduce<N, T> {
     fn generate_child(&self, depth: usize, node: &N) -> Vec<TreeElement<N, T>>;
     fn collapse(&self, node: &N) -> T;
     fn reduce(&self, it: impl Iterator<Item = T>) -> T;
+}
+
+pub trait TreeReduceDebug<N: Display, T: Debug>: TreeReduce<N, T> {
+    fn generate_child_debug(&self, depth: usize, node: &N) -> Vec<(String, TreeElement<N, T>)>;
+    fn compute_debug(&self, mut debug: String, node: &N, depth: usize) -> T {
+        let childs = self.generate_child_debug(depth, &node);
+        if childs.is_empty() {
+            let collapsed = self.collapse(&node);
+            println!("{debug}* = {collapsed:?}");
+            collapsed
+        } else {
+            self.reduce(childs.into_iter().map(move |child| match child.1 {
+                TreeElement::Node(node) => self.compute_debug(
+                    format!("{debug} -({})-> {}", child.0, node),
+                    &node,
+                    depth + 1,
+                ),
+                TreeElement::Collapsed(leaf) => {
+                    println!("{debug} [{}]* = {leaf:?}",child.0);
+                    leaf
+                }
+            }))
+        }
+    }
 }
 
 pub trait TreeReduceCompute<N, T>: TreeReduce<N, T> {

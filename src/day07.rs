@@ -166,6 +166,33 @@ impl<'a> TreeReduce<usize, bool> for EquationSolver<'a> {
     }
 }
 
+impl<'a> TreeReduceDebug<usize, bool> for EquationSolver<'a> {
+    fn generate_child_debug(
+        &self,
+        depth: usize,
+        node: &usize,
+    ) -> Vec<(String, TreeElement<usize, bool>)> {
+        let ad_hoc = vec!["+", "*", "||"];
+        if let Some(number) = self.numbers.get(depth) {
+            self.generators
+                .iter()
+                .zip(ad_hoc)
+                .map(|(gen, deb)| match gen(*node, *number) {
+                    result if result <= self.target => {
+                        (format!("{}{}", deb, number), TreeElement::Node(result))
+                    }
+                    _ => (
+                        format!(" {}* = false", number),
+                        TreeElement::Collapsed(false),
+                    ),
+                })
+                .collect()
+        } else {
+            vec![]
+        }
+    }
+}
+
 #[aoc(day7, part2, tree_reducer)]
 fn solve_part2_tree_reducer(input: &ParsedInput) -> Result<usize, String> {
     let generator = vec![|a, b| a + b, |a, b| a * b, |a: usize, b: usize| {
@@ -174,7 +201,11 @@ fn solve_part2_tree_reducer(input: &ParsedInput) -> Result<usize, String> {
     let calibration_result = input
         .iter()
         .filter(|equation| {
-            EquationSolver::new(equation.0, &equation.1, &generator).compute(&equation.1[0], 1)
+            EquationSolver::new(equation.0, &equation.1, &generator).compute_debug(
+                format!("{}", equation.1[0]),
+                &equation.1[0],
+                1,
+            )
         })
         .map(|equation| equation.0)
         .sum::<usize>();
