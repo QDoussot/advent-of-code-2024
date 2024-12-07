@@ -88,10 +88,7 @@ fn count_posible_solution_bis(
             0
         };
 
-        let mut find_power = Some(1);
-        while let Some(power) = find_power.filter(|p| p <= &remaning[0]) {
-            find_power = find_power.and_then(|f| f.checked_mul(10));
-        }
+        let find_power = 10usize.checked_pow(remaning[0].ilog10() + 1);
         let concat_possible = if let Some(find_power) = find_power {
             let concat = find_power * current_value + remaning[0];
             if concat <= target {
