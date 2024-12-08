@@ -1,15 +1,14 @@
 use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::{aoc, aoc_generator};
-use derive_more::derive::{Add, Sub};
-use eyre::Report;
+use eyre::{Report,eyre};
 
 use huparse::{parse::Parse, parser};
 use itertools::Itertools;
 
-#[derive(Debug, Copy, Clone, Add, Sub, Hash, PartialEq, Eq)]
-struct Coords(isize, isize);
-type ParsedInput = (Coords, HashMap<char, Vec<Coords>>);
+use crate::space2d::{BoundingBox, Coord};
+
+type ParsedInput = (BoundingBox, HashMap<char, Vec<Coord>>);
 
 #[aoc_generator(day8)]
 fn parse_day8(input: &str) -> Result<ParsedInput, Report> {
@@ -25,12 +24,15 @@ fn parse_day8(input: &str) -> Result<ParsedInput, Report> {
                     '.' => None,
                     c => Some(c),
                 }
-                .map(|item| (item, Coords(x as isize, y as isize)))
+                .map(|item| (item, Coord(x as isize, y as isize)))
             })
         })
         .flatten()
         .into_group_map();
-    Ok((Coords(w as isize, h as isize), map))
+    Ok((
+        BoundingBox::try_from_size(w, h).ok_or(eyre!("Input too high to be represended"))?,
+        map,
+    ))
 }
 
 #[aoc(day8, part1)]
@@ -44,16 +46,13 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
                 .into_iter()
                 //.map(|(x, y)| Coords(*x, *y))
                 .tuple_combinations()
-                .map(|couple: (Coords, Coords)| {
+                .map(|couple: (Coord, Coord)| {
                     vec![
                         couple.0 + (couple.0 - couple.1),
                         couple.1 + (couple.1 - couple.0),
                     ]
                     .into_iter()
-                    .filter(|coord| {
-                        (0isize..input.0 .0).contains(&coord.0)
-                            && (0isize..input.0 .1).contains(&coord.1)
-                    })
+                    .filter(|coord| input.0.contains(&coord))
                     .inspect(|coord| {
                         println!(
                             "{}: {:?} - {:?} node at {:?}",
@@ -80,21 +79,15 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
                 .into_iter()
                 //.map(|(x, y)| Coords(*x, *y))
                 .tuple_combinations()
-                .map(|couple: (Coords, Coords)| {
+                .map(|couple: (Coord, Coord)| {
                     let one_dir = std::iter::successors(Some(couple.0), |coord| {
                         Some(*coord + (couple.0 - couple.1))
                     })
-                    .take_while(|coord| {
-                        (0isize..input.0 .0).contains(&coord.0)
-                            && (0isize..input.0 .1).contains(&coord.1)
-                    });
+                    .take_while(|coord| input.0.contains(coord));
                     let snd_dir = std::iter::successors(Some(couple.1), |coord| {
                         Some(*coord + (couple.1 - couple.0))
                     })
-                    .take_while(|coord| {
-                        (0isize..input.0 .0).contains(&coord.0)
-                            && (0isize..input.0 .1).contains(&coord.1)
-                    });
+                    .take_while(|coord| input.0.contains(coord));
                     one_dir
                         .chain(snd_dir)
                         .inspect(|coord| {
