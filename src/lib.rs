@@ -13,6 +13,7 @@ mod space2d;
 
 mod day07;
 pub mod tree_reduce;
+mod day08;
 
 use aoc_runner_derive::aoc_main;
 
