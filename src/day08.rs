@@ -16,7 +16,8 @@ fn parse_day8(input: &str) -> Result<ParsedInput, Report> {
     let parser = parser!([# char | "" / "\n"]);
     let (w, h, lines) = parser.parse_top(input)?.into_tuple();
 
-    let map = lines.into_iter()
+    let map = lines
+        .into_iter()
         .enumerate()
         .map(|(y, line)| {
             line.into_iter().enumerate().filter_map(move |(x, c)| {
@@ -31,7 +32,6 @@ fn parse_day8(input: &str) -> Result<ParsedInput, Report> {
         .into_group_map();
     Ok((Coords(w as isize, h as isize), map))
 }
-
 
 #[aoc(day8, part1)]
 fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
@@ -95,14 +95,15 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
                         (0isize..input.0 .0).contains(&coord.0)
                             && (0isize..input.0 .1).contains(&coord.1)
                     });
-                    one_dir.chain(snd_dir)
-                    .inspect(|coord| {
-                        println!(
-                            "{}: {:?} - {:?} node at {:?}",
-                            *antenna, couple.0, couple.1, *coord
-                        )
-                    })
-                    .collect::<Vec<_>>()
+                    one_dir
+                        .chain(snd_dir)
+                        .inspect(|coord| {
+                            println!(
+                                "{}: {:?} - {:?} node at {:?}",
+                                *antenna, couple.0, couple.1, *coord
+                            )
+                        })
+                        .collect::<Vec<_>>()
                 })
                 .flatten()
         })

@@ -71,18 +71,16 @@ impl GuardPatrol {
 }
 
 trait Field {
-    fn defined_on(&self,coord: &Coord) -> bool;
+    fn defined_on(&self, coord: &Coord) -> bool;
 }
 
 impl Field for Coord {
-    fn defined_on(&self,coord: &Coord) -> bool {
-        (0..self.0).contains(&coord.0)
-            &&
-        (1..self.1).contains(&coord.1)
+    fn defined_on(&self, coord: &Coord) -> bool {
+        (0..self.0).contains(&coord.0) && (1..self.1).contains(&coord.1)
     }
 }
 
-fn move_until_loop<F:Field, S: PartialEq + Eq + std::hash::Hash>(
+fn move_until_loop<F: Field, S: PartialEq + Eq + std::hash::Hash>(
     field: F,
     init: (Coord, S),
     move_fct: impl Fn(&(Coord, S)) -> (Coord, S),
@@ -90,7 +88,7 @@ fn move_until_loop<F:Field, S: PartialEq + Eq + std::hash::Hash>(
     let mut visited = HashSet::<(Coord, S)>::new();
     let mut looping = false;
     let mut state = init;
-    while !looping  && field.defined_on(&state.0){
+    while !looping && field.defined_on(&state.0) {
         let new_state = move_fct(&state);
         looping = !visited.insert(state);
         state = new_state;
@@ -103,16 +101,19 @@ fn run_guard(
     size: &Coord,
     (mut guard_pos, mut guard_dir): (Coord, Direction),
 ) -> GuardPatrol {
-
-    move_until_loop(*size, (guard_pos,guard_dir), |(mut coord, mut delta): &(Coord,Direction)| {
-        let toward = moved(&coord,&delta);
-        if  obstacles.contains(&toward) {
-            delta = delta.rotate();
-        } else {
-            coord=toward;
-        }
-        (coord,delta)
-    });
+    move_until_loop(
+        *size,
+        (guard_pos, guard_dir),
+        |(mut coord, mut delta): &(Coord, Direction)| {
+            let toward = moved(&coord, &delta);
+            if obstacles.contains(&toward) {
+                delta = delta.rotate();
+            } else {
+                coord = toward;
+            }
+            (coord, delta)
+        },
+    );
 
     let mut visited = HashSet::<(Coord, Direction)>::new();
     let mut is_looping = false;
