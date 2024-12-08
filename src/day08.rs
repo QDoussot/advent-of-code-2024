@@ -4,6 +4,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use derive_more::derive::{Add, Sub};
 use eyre::Report;
 
+use huparse::{parse::Parse, parser};
 use itertools::Itertools;
 
 #[derive(Debug, Copy, Clone, Add, Sub, Hash, PartialEq, Eq)]
@@ -12,14 +13,13 @@ type ParsedInput = (Coords, HashMap<char, Vec<Coords>>);
 
 #[aoc_generator(day8)]
 fn parse_day8(input: &str) -> Result<ParsedInput, Report> {
-    let lines = input.lines().collect::<Vec<_>>();
-    let w = lines[0].len();
-    let h = lines.len();
-    let map = input
-        .lines()
+    let parser = parser!([# char | "" / "\n"]);
+    let (w, h, lines) = parser.parse_top(input)?.into_tuple();
+
+    let map = lines.into_iter()
         .enumerate()
         .map(|(y, line)| {
-            line.chars().enumerate().filter_map(move |(x, c)| {
+            line.into_iter().enumerate().filter_map(move |(x, c)| {
                 match c {
                     '.' => None,
                     c => Some(c),
