@@ -7,9 +7,8 @@ use itertools::{Either, Itertools};
 
 use crate::space2d::{moved, Coord, Direction};
 
-type ParsedInput = (HashSet<Coord>, (isize, isize), Option<(Coord, Direction)>);
+type ParsedInput = (HashSet<Coord>, Coord, Option<(Coord, Direction)>);
 
-// type Direction = (isize, isize);
 
 #[derive(Copy, Clone)]
 enum Item {
@@ -35,7 +34,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
                     '<' => Some(Item::Guard(Direction::Le)),
                     _ => None,
                 }
-                .map(|item| ((x as isize, y as isize), item))
+                .map(|item| (Coord(x as isize, y as isize), item))
             })
         })
         .flatten()
@@ -49,7 +48,7 @@ fn parse_day6(input: &str) -> Result<ParsedInput, Report> {
 
     Ok((
         ground.into_iter().collect(),
-        (w as isize, h as isize),
+        Coord(w as isize, h as isize),
         guard.pop(),
     ))
 }
