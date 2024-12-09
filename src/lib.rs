@@ -15,6 +15,7 @@ mod functional;
 mod day07;
 pub mod tree_reduce;
 mod day08;
+mod day09;
 
 use aoc_runner_derive::aoc_main;
 
