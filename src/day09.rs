@@ -61,11 +61,12 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
     let mut input = to_block(&input);
     while input
         .iter()
-        .dedup_by(|x, y| x.is_some() == y.is_some())
-        .count()
-        > 2
+        .map(|x| x.is_some())
+        .dedup()
+        .collect::<Vec<_>>()
+        != vec![true, false]
     {
-        if let Some((empty_pos, _)) = input.iter().find_position(|block| block.is_none()) {
+        if let Some(empty_pos, ) = input.iter().position(|block| block.is_none()) {
             if let Some(tomove) = input.iter().rposition(|e| e.is_some()) {
                 input[empty_pos] = Some(input[tomove].unwrap());
                 input[tomove] = None;
