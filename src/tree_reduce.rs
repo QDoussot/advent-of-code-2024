@@ -1,7 +1,4 @@
-use std::{
-    fmt::{Debug, Display},
-    iter,
-};
+use std::fmt::{Debug, Display};
 
 pub enum TreeElement<N, T> {
     Node(N),
@@ -16,7 +13,7 @@ pub trait TreeReduce<N, T> {
 
 pub trait TreeReduceDebug<N: Display, T: Debug>: TreeReduce<N, T> {
     fn generate_child_debug(&self, depth: usize, node: &N) -> Vec<(String, TreeElement<N, T>)>;
-    fn compute_debug(&self, mut debug: String, node: &N, depth: usize) -> T {
+    fn compute_debug(&self, debug: String, node: &N, depth: usize) -> T {
         let childs = self.generate_child_debug(depth, &node);
         if childs.is_empty() {
             let collapsed = self.collapse(&node);

@@ -3,10 +3,9 @@ use eyre::Report;
 
 use huparse::parse::Parse;
 use huparse::parser;
-use itertools::Itertools;
 
 use crate::tree_reduce::{
-    tree_reduce, TreeElement, TreeReduce, TreeReduceCompute, TreeReduceDebug,
+    tree_reduce, TreeElement, TreeReduce, TreeReduceDebug,
 };
 
 type ParsedInput = Vec<(usize, Vec<usize>)>;

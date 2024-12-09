@@ -33,7 +33,9 @@ impl BoundingBox {
 
 pub trait Field {
     type Out;
+    #[allow(dead_code)]
     fn get(&self, coords: &Coord) -> Option<&Self::Out>;
+    #[allow(dead_code)]
     fn get_mut(&mut self, coords: &Coord) -> Option<&mut Self::Out>;
     fn definition_area(&self) -> &BoundingBox;
 }
