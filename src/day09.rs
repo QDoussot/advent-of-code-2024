@@ -16,24 +16,10 @@ fn print(res: &[Option<usize>]) {
     println!("");
 }
 
-#[derive(Debug, Copy, Clone)]
-enum Block {
-    Free(usize),
-    Taken(usize, usize),
-}
-
-impl Block {
-    fn size(&self) -> usize {
-        match self {
-            Block::Free(s) => *s,
-            Block::Taken(s, _) => *s,
-        }
-    }
-}
+type Block = (usize, Option<usize>);
 
 #[aoc_generator(day9)]
 fn parse_day9(input: &str) -> Result<ParsedInput, Report> {
-    use Block::*;
     let parser = parser!([# usize | ""  / "\n"]);
 
     let value = parser.parse_top(input)?;
@@ -43,9 +29,9 @@ fn parse_day9(input: &str) -> Result<ParsedInput, Report> {
         .enumerate()
         .map(|(i, x)| {
             if i % 2 == 0 {
-                Taken(*x, i / 2)
+                (*x, Some(i / 2))
             } else {
-                Free(*x)
+                (*x, None)
             }
         })
         .collect();
@@ -63,10 +49,10 @@ fn parse_day9(input: &str) -> Result<ParsedInput, Report> {
 //});
 
 fn to_block(input: &[Block]) -> Vec<Option<usize>> {
-    input.iter().fold(vec![], |mut acc, x| {
-        match x {
-            Block::Free(n) => acc.extend(std::iter::repeat_n(None, *n)),
-            Block::Taken(n, value) => acc.extend(std::iter::repeat_n(Some(*value), *n)),
+    input.iter().fold(vec![], |mut acc, (size, value)| {
+        match (size, value) {
+            (n, None) => acc.extend(std::iter::repeat_n(None, *n)),
+            (n, Some(value)) => acc.extend(std::iter::repeat_n(Some(*value), *n)),
         }
         acc
     })
@@ -98,20 +84,10 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
 
 #[aoc(day9, part2)]
 fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
-    use Block::*;
-
     let debug = false;
 
     let mut target = input.clone();
-    let ids: Vec<_> = input
-        .iter()
-        .enumerate()
-        .filter_map(|(_, b)| match b {
-            Free(_) => None,
-            Taken(_, id) => Some(*id),
-        })
-        .rev()
-        .collect();
+    let ids: Vec<_> = input.iter().filter_map(|b| b.1).rev().collect();
 
     if debug {
         print(&to_block(&target));
@@ -130,14 +106,15 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
                 |swap, (curr_pos, block)| {
                     match (swap, block) {
                         // find the block to be moved
-                        (None, Taken(size, id)) if id == to_move_id => {
-                            Some((Taken(*size, *id), curr_pos, Free(*size), curr_pos))
+                        (None, file @ (size, Some(id))) if id == to_move_id => {
+                            //By default, swap the bloc with itself
+                            Some((*file, curr_pos, (*size, None), curr_pos))
                         }
                         // and check afterwards for potential new place
-                        (Some((file, file_pos, _, _)), free_space)
-                            if file.size() >= free_space.size() =>
+                        (Some((file, file_pos, _, _)), free @ (free_space_size, None))
+                            if file.0 <= *free_space_size =>
                         {
-                            Some((file, file_pos, *free_space, curr_pos))
+                            Some((file, file_pos, *free, curr_pos))
                         }
                         _ => swap,
                     }
@@ -145,11 +122,12 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
             )
             .filter(|(_, file_pos, _, target_pos)| file_pos != target_pos);
 
+
         // Do the swap
         if let Some((block, block_pos, free, free_pos)) = swap {
-            target[block_pos] = Free(block.size());
-            if free.size() > block.size() {
-                target[free_pos] = Free(block.size() - free.size());
+            target[block_pos] = (block.0, None);
+            if free.0 > block.0 {
+                target[free_pos] = (free.0 - block.0, None);
             } else {
                 target.remove(free_pos);
             }
