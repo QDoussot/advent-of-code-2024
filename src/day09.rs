@@ -76,6 +76,26 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
     Ok(compute_checksum(&input))
 }
 
+use crate::functional::do_until_stable;
+#[aoc(day9, part1, use_functional)]
+fn solve_part1_use_f(input: &ParsedInput) -> Result<usize, String> {
+    let input = to_block(&input);
+    let compressed = do_until_stable(
+        input,
+        |mut disk: Vec<Option<usize>>| {
+            if let Some(tomove) = disk.iter().rposition(|e| e.is_some()) {
+                if let Some(empty_pos) = disk.iter().take(tomove).position(|block| block.is_none()) {
+                    disk.swap(empty_pos, tomove);
+                }
+            }
+            disk
+        },
+        |disk| disk.clone(),
+    );
+
+    Ok(compute_checksum(&compressed))
+}
+
 type Swap = (Block, usize, Block, usize);
 
 fn find_swap_double_find_version(iter: &[Block], id: &usize) -> Option<Swap> {
