@@ -149,13 +149,28 @@ fn move_file(target: &mut Vec<Block>, swap: Option<Swap>) {
     }
 }
 
-#[aoc(day9, part2)]
+#[aoc(day9, part2, double_find)]
 fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
     let mut target = input.clone();
     let ids: Vec<_> = input.iter().filter_map(|b| b.1).rev().collect();
 
     ids.iter().for_each(|to_move_id| {
         let swap = find_swap_double_find_version(&target, to_move_id);
+        move_file(&mut target, swap);
+    });
+
+    let res: usize = compute_checksum(&to_block(&target));
+
+    Ok(res)
+}
+
+#[aoc(day9, part2, fold)]
+fn solve_part2_fold(input: &ParsedInput) -> Result<usize, String> {
+    let mut target = input.clone();
+    let ids: Vec<_> = input.iter().filter_map(|b| b.1).rev().collect();
+
+    ids.iter().for_each(|to_move_id| {
+        let swap = find_swap_fold_version(&target, to_move_id);
         move_file(&mut target, swap);
     });
 
