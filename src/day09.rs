@@ -39,15 +39,6 @@ fn parse_day9(input: &str) -> Result<ParsedInput, Report> {
     Ok(res)
 }
 
-//let res = value[0].iter().enumerate().fold(vec![], |mut acc, (i, x)| {
-//    if i % 2 == 0 {
-//        acc.extend(std::iter::repeat_n(Some(i / 2), *x));
-//    } else {
-//        acc.extend(std::iter::repeat_n(None, *x));
-//    }
-//    acc
-//});
-
 fn to_block(input: &[Block]) -> Vec<Option<usize>> {
     input.iter().fold(vec![], |mut acc, (size, value)| {
         match (size, value) {
@@ -56,6 +47,13 @@ fn to_block(input: &[Block]) -> Vec<Option<usize>> {
         }
         acc
     })
+}
+
+fn compute_checksum(disk: &[Option<usize>]) -> usize {
+    disk.iter()
+        .enumerate()
+        .map(|(i, x)| i * x.unwrap_or(0))
+        .sum()
 }
 
 #[aoc(day9, part1)]
@@ -74,72 +72,73 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
             }
         }
     }
-    let res: usize = input
-        .iter()
+    Ok(compute_checksum(&input))
+}
+
+type Swap = (Block, usize, Block, usize);
+
+fn find_swap_double_find_version(iter: &[Block], id: &usize) -> Option<Swap> {
+    iter.iter()
+        .find_position(|block| block.1 == Some(*id))
+        .and_then(|(pos, file)| {
+            iter.iter()
+                .take(pos)
+                .find_position(|block| block.0 >= file.0 && block.1.is_none())
+                .map(|(free_pos, free)| (*file, pos, *free, free_pos))
+        })
+}
+
+fn find_swap_fold_version(disk: &[Block], to_move_id: &usize) -> Option<Swap> {
+    // Look for a potential swapping of blocks
+    disk.iter()
         .enumerate()
-        .map(|(i, x)| i * x.unwrap_or(0))
-        .sum();
-    Ok(res)
+        .rev() // Goes backward,
+        .fold(
+            None::<(Block, usize, Block, usize)>,
+            |swap, (curr_pos, block)| {
+                match (swap, block) {
+                    // find the block to be moved
+                    (None, file @ (size, Some(id))) if id == to_move_id => {
+                        //By default, swap the bloc with itself
+                        Some((*file, curr_pos, (*size, None), curr_pos))
+                    }
+                    // and check afterwards for potential new place
+                    (Some((file, file_pos, _, _)), free @ (free_space_size, None))
+                        if file.0 <= *free_space_size =>
+                    {
+                        Some((file, file_pos, *free, curr_pos))
+                    }
+                    _ => swap,
+                }
+            },
+        )
+        .filter(|(_, file_pos, _, target_pos)| file_pos != target_pos)
+}
+
+fn move_file(target: &mut Vec<Block>, swap: Option<Swap>) {
+    // Do the swap
+    if let Some((block, block_pos, free, free_pos)) = swap {
+        target[block_pos] = (block.0, None);
+        if free.0 > block.0 {
+            target[free_pos] = (free.0 - block.0, None);
+        } else {
+            target.remove(free_pos);
+        }
+        target.insert(free_pos, block);
+    }
 }
 
 #[aoc(day9, part2)]
 fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
-    let debug = false;
-
     let mut target = input.clone();
     let ids: Vec<_> = input.iter().filter_map(|b| b.1).rev().collect();
 
-    if debug {
-        print(&to_block(&target));
-        println!("");
-    }
-
     ids.iter().for_each(|to_move_id| {
-        //
-        // Look for a potential swapping of blocks
-        let swap = target
-            .iter()
-            .enumerate()
-            .rev() // Goes backward,
-            .fold(
-                None::<(Block, usize, Block, usize)>,
-                |swap, (curr_pos, block)| {
-                    match (swap, block) {
-                        // find the block to be moved
-                        (None, file @ (size, Some(id))) if id == to_move_id => {
-                            //By default, swap the bloc with itself
-                            Some((*file, curr_pos, (*size, None), curr_pos))
-                        }
-                        // and check afterwards for potential new place
-                        (Some((file, file_pos, _, _)), free @ (free_space_size, None))
-                            if file.0 <= *free_space_size =>
-                        {
-                            Some((file, file_pos, *free, curr_pos))
-                        }
-                        _ => swap,
-                    }
-                },
-            )
-            .filter(|(_, file_pos, _, target_pos)| file_pos != target_pos);
-
-
-        // Do the swap
-        if let Some((block, block_pos, free, free_pos)) = swap {
-            target[block_pos] = (block.0, None);
-            if free.0 > block.0 {
-                target[free_pos] = (free.0 - block.0, None);
-            } else {
-                target.remove(free_pos);
-            }
-            target.insert(free_pos, block);
-        }
+        let swap = find_swap_double_find_version(&target, to_move_id);
+        move_file(&mut target, swap);
     });
 
-    let res: usize = to_block(&target)
-        .iter()
-        .enumerate()
-        .map(|(i, x)| i * x.unwrap_or(0))
-        .sum();
+    let res: usize = compute_checksum(&to_block(&target));
 
     Ok(res)
 }
