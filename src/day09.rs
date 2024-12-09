@@ -23,17 +23,10 @@ enum Block {
 }
 
 impl Block {
-    fn is_taken(&self, id: usize) -> bool {
+    fn size(&self) -> usize {
         match self {
-            Block::Free(_) => false,
-            Block::Taken(_, actual_id) => id == *actual_id,
-        }
-    }
-
-    fn is_available_free_space(&self, min_size: usize) -> bool {
-        match self {
-            Block::Free(n) => *n >= min_size,
-            Block::Taken(_, _) => false,
+            Block::Free(s) => *s,
+            Block::Taken(s, _) => *s,
         }
     }
 }
@@ -81,7 +74,6 @@ fn to_block(input: &[Block]) -> Vec<Option<usize>> {
 
 #[aoc(day9, part1)]
 fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
-    let mut input = input.clone();
     let mut input = to_block(&input);
     while input
         .iter()
@@ -116,7 +108,7 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         .enumerate()
         .filter_map(|(_, b)| match b {
             Free(_) => None,
-            Taken(size, id) => Some((size, id)),
+            Taken(_, id) => Some(*id),
         })
         .rev()
         .collect();
@@ -126,38 +118,45 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         println!("");
     }
 
-    ids.iter().for_each(|(taken_size, taken_id)| {
-        let taken_pos = target
+    ids.iter().for_each(|to_move_id| {
+        //
+        // Look for a potential swapping of blocks
+        let swap = target
             .iter()
-            .find_position(|b| b.is_taken(**taken_id))
-            .unwrap()
-            .0;
-        if let Some((free_place_pos, free_space)) =
-            target
-                .iter()
-                .enumerate()
-                .find_map(|(free_place_pos, b)| match *b {
-                    Block::Free(free_space)
-                        if free_space >= **taken_size && free_place_pos < taken_pos =>
-                    {
-                        Some((free_place_pos, free_space))
+            .enumerate()
+            .rev() // Goes backward,
+            .fold(
+                None::<(Block, usize, Block, usize)>,
+                |swap, (curr_pos, block)| {
+                    match (swap, block) {
+                        // find the block to be moved
+                        (None, Taken(size, id)) if id == to_move_id => {
+                            Some((Taken(*size, *id), curr_pos, Free(*size), curr_pos))
+                        }
+                        // and check afterwards for potential new place
+                        (Some((file, file_pos, _, _)), free_space)
+                            if file.size() >= free_space.size() =>
+                        {
+                            Some((file, file_pos, *free_space, curr_pos))
+                        }
+                        _ => swap,
                     }
-                    _ => None,
-                })
-        {
-            if debug {
-                println!("free space for {taken_size}x{taken_id} (currently at {taken_pos}) at {free_place_pos}");
-            }
-            target[taken_pos] = Free(**taken_size);
-            target[free_place_pos] = Taken(**taken_size, **taken_id);
+                },
+            )
+            .filter(|(_, file_pos, _, target_pos)| file_pos != target_pos);
 
-            if debug { print(&to_block(&target)); }
-            if free_space > **taken_size {
-                target.insert(free_place_pos + 1, Free(free_space - **taken_size));
+        // Do the swap
+        if let Some((block, block_pos, free, free_pos)) = swap {
+            target[block_pos] = Free(block.size());
+            if free.size() > block.size() {
+                target[free_pos] = Free(block.size() - free.size());
+            } else {
+                target.remove(free_pos);
             }
-            if debug { println!(""); }
+            target.insert(free_pos, block);
         }
     });
+
     let res: usize = to_block(&target)
         .iter()
         .enumerate()
