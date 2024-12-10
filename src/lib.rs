@@ -17,6 +17,7 @@ pub mod tree_reduce;
 mod day08;
 mod day09;
 mod day10;
+mod explore_2d;
 
 use aoc_runner_derive::aoc_main;
 
