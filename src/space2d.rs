@@ -41,12 +41,12 @@ pub trait Field {
 }
 
 use huparse::table::Table;
-struct TableField<T> {
+pub struct TableField<T> {
     bounding_box: BoundingBox,
     values: Table<T>,
 }
 
-enum TableFieldError {
+pub enum TableFieldError {
     TableTooBig,
 }
 
