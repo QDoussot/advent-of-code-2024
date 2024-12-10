@@ -18,6 +18,7 @@ mod day08;
 mod day09;
 mod day10;
 mod explore_2d;
+mod day10_original;
 
 use aoc_runner_derive::aoc_main;
 
