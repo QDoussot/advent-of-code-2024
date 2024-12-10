@@ -54,24 +54,20 @@ where
     fn generate_child(
         &self,
         _depth: usize,
-        (node, _value): &(Coord, F::Out),
+        (node, value): &(Coord, F::Out),
     ) -> Vec<TreeElement<(Coord, F::Out), G::Loot>> {
-        if let Some(value) = self.field.get(node) {
-            self.explore2d
-                .considered_directions()
-                .iter()
-                .map(|c| *c + *node)
-                //
-                // Discard coords out of the field definition
-                .filter_map(|c| Some((c, *self.field.get(&c)?)))
-                //
-                // Now the explorer filter the potential directions
-                .filter(|(_, child_value)| self.explore2d.filtered_directions(child_value, value))
-                .map(|c| TreeElement::Node::<(Coord, F::Out), G::Loot>(c))
-                .collect()
-        } else {
-            vec![]
-        }
+        self.explore2d
+            .considered_directions()
+            .iter()
+            .map(|c| *c + *node)
+            //
+            // Discard coords out of the field definition
+            .filter_map(|c| Some((c, *self.field.get(&c)?)))
+            //
+            // Now the explorer filter the potential directions
+            .filter(|(_, child_value)| self.explore2d.filtered_directions(child_value, value))
+            .map(|c| TreeElement::Node::<(Coord, F::Out), G::Loot>(c))
+            .collect()
     }
 
     fn collapse(&self, node: &(Coord, F::Out)) -> G::Loot {
