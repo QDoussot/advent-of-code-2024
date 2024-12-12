@@ -110,6 +110,12 @@ fn display_garden_with_fences(
     }
 }
 
+struct GardenDetails {
+    tag_per_coord: HashMap<Coord, usize>,
+    bounding_box: BoundingBox,
+    fences_per_tag: HashMap<usize, Vec<Coord>>,
+}
+
 #[aoc_generator(day12)]
 fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
     let parser = parser!([# char | "" / "\n"]);
@@ -136,8 +142,15 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
         }
     }
 
+    let garden_details = GardenDetails {
+        tag_per_coord: connexe,
+        bounding_box: *bb,
+        fences_per_tag: fencing,
+    };
+
     // Gather each coords per tag
-    let coords_per_tag = connexe
+    let coords_per_tag = garden_details
+        .tag_per_coord
         .into_iter()
         .map(|(coord, tag)| (tag, coord))
         .into_group_map()
@@ -145,7 +158,7 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
 
     // Compute part perimeter * part area
     let res = coords_per_tag
-        .map(|(tag, coords)| fencing[&tag].len() * coords.len())
+        .map(|(tag, coords)| garden_details.fences_per_tag[&tag].len() * coords.len())
         .sum();
 
     Ok(res)
@@ -165,11 +178,18 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
                 get_connexe(&c, grp, input, &mut connexe, &mut fencing);
                 grp += 1;
             }
-            //
         }
     }
+
+    let garden_details = GardenDetails {
+        tag_per_coord: connexe,
+        bounding_box: *bb,
+        fences_per_tag: fencing,
+    };
+
     // Generate a map of fences side tag
-    let fencing: HashMap<_, _> = fencing
+    let fencing: HashMap<_, _> = garden_details
+        .fences_per_tag
         .into_iter()
         .map(|(tag, coords)| coords.into_iter().map(move |c| (c, tag)))
         .flatten()
@@ -177,9 +197,9 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
 
     // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
     let mut region_sides = HashMap::<usize, usize>::new();
-    for x in 0..(bb.xmax * 3 + 2) {
+    for x in 0..(garden_details.bounding_box.xmax * 3 + 2) {
         if x % 3 != 2 {
-            let col_side_counts = (0..bb.ymax)
+            let col_side_counts = (0..garden_details.bounding_box.ymax)
                 .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
                 .dedup_by(|t1, t2| match (t1, t2) {
                     (None, None) => true,
@@ -196,9 +216,9 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     }
 
     // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
-    for y in 0..(bb.ymax * 3 + 2) {
+    for y in 0..(garden_details.bounding_box.ymax * 3 + 2) {
         if y % 3 != 2 {
-            let row_side_counts = (0..bb.ymax)
+            let row_side_counts = (0..garden_details.bounding_box.ymax)
                 .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
                 .dedup_by(|t1, t2| match (t1, t2) {
                     (None, None) => true,
@@ -215,7 +235,8 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     }
 
     // Compute the price number of regions sides
-    let res: usize = connexe
+    let res: usize = garden_details
+        .tag_per_coord
         .into_iter()
         .map(|(k, v)| (v, k))
         .into_group_map()
