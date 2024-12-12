@@ -129,7 +129,7 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
 }
 
 fn display_garden_with_fences(
-    input: &TableField<char>,
+    garden: &TableField<char>,
     fencing: &HashMap<Coord,usize>,
     bb: &BoundingBox,
 ) {
@@ -140,7 +140,7 @@ fn display_garden_with_fences(
             } else if x % 3 == 2 && y % 3 == 2 {
                 print!(
                     "{}",
-                    *input.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
+                    *garden.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
                 );
             } else {
                 print!(" ");
