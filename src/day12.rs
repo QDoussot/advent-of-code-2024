@@ -325,7 +325,7 @@ mod tests {
             };
             let expected_price = 80;
             let garden = parse_garden(&garden).unwrap();
-            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price) ;
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -353,7 +353,10 @@ mod tests {
             };
             let expected_bulk_discount = 236;
             let garden = parse_garden(&garden).unwrap();
-            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_bulk_discount);
+            assert_eq!(
+                bulk_discount_for_fences(&garden).unwrap(),
+                expected_bulk_discount
+            );
         }
 
         #[test]
@@ -371,7 +374,7 @@ mod tests {
             assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
-       #[test]
+        #[test]
         fn bulk_discount_for_larger_region_example() {
             let garden = indoc! {"
                 RRRRIICCFF
@@ -389,6 +392,5 @@ mod tests {
             let garden = parse_garden(&garden).unwrap();
             assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
-
     }
 }
