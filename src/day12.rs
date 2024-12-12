@@ -111,14 +111,14 @@ fn display_garden_with_fences(
 }
 
 #[aoc_generator(day12)]
-fn parse_day12(input: &str) -> Result<ParsedInput, Report> {
+fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
     let parser = parser!([# char | "" / "\n"]);
     let table = parser.parse_top(input)?;
     TableField::try_from(table).map_err(|_| eyre!(""))
 }
 
 #[aoc(day12, part1)]
-fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
+fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let mut connexe = HashMap::<Coord, usize>::new();
     let mut fencing = HashMap::<usize, Vec<Coord>>::new();
     let mut grp = 0;
@@ -152,7 +152,7 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
 }
 
 #[aoc(day12, part2)]
-fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
+fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let mut connexe = HashMap::<Coord, usize>::new();
     let mut fencing = HashMap::<usize, Vec<Coord>>::new();
     let mut tag_letter = HashMap::<usize, char>::new();
@@ -238,16 +238,16 @@ mod tests {
         fn price_for_one_cell_garden() {
             let garden = "Y";
             let expected_price = 4;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
         fn bulk_discount_price_for_one_cell_garden() {
             let garden = "Y";
             let expected_price = 4;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -259,8 +259,8 @@ mod tests {
                 EEEC"
             };
             let expected_price = 140;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -273,8 +273,8 @@ mod tests {
                 OOOOO"
             };
             let expected_price = 772;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -292,8 +292,8 @@ mod tests {
                 MMMISSJEEE"
             };
             let expected_price = 1930;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -305,8 +305,8 @@ mod tests {
                 EEEC"
             };
             let expected_price = 80;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_price) ;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price) ;
         }
 
         #[test]
@@ -319,8 +319,8 @@ mod tests {
                 OOOOO"
             };
             let expected_price = 436;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
         #[test]
@@ -333,8 +333,8 @@ mod tests {
                 EEEEE"
             };
             let expected_bulk_discount = 236;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_bulk_discount);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_bulk_discount);
         }
 
         #[test]
@@ -348,8 +348,8 @@ mod tests {
                 AAAAAA"
             };
             let expected_price = 368;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
        #[test]
@@ -367,8 +367,8 @@ mod tests {
                 MMMISSJEEE"
             };
             let expected_price = 1206;
-            let garden = parse_day12(&garden).unwrap();
-            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
     }
