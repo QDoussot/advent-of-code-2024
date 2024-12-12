@@ -155,14 +155,12 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
 fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let mut connexe = HashMap::<Coord, usize>::new();
     let mut fencing = HashMap::<usize, Vec<Coord>>::new();
-    let mut tag_letter = HashMap::<usize, char>::new();
     let mut grp = 0;
     let bb = input.definition_area();
     for y in bb.ymin..bb.ymax {
         for x in bb.xmin..bb.xmax {
             let c = Coord(x, y);
             if !connexe.contains_key(&c) {
-                tag_letter.insert(grp, *input.get(&c).unwrap());
                 connexe.insert(c, grp);
                 get_connexe(&c, grp, input, &mut connexe, &mut fencing);
                 grp += 1;
