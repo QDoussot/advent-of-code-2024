@@ -364,6 +364,20 @@ mod tests {
             };
             let expected_price = 368;
             let garden = parse_garden(&garden).unwrap();
+            let details = GardenDetails::compute_from(&garden);
+
+            let expected_sides = [(Coord(0, 0), 11), (Coord(3, 1), 4), (Coord(1, 3), 4)];
+            expected_sides.iter().for_each(|(c, expected)| {
+                let tag = details.tag_per_coord.get(&c).unwrap();
+                assert_eq!(
+                    details.sides_per_region().get(tag).unwrap(),
+                    expected,
+                    "Region containing {c:?} (tag = {tag}) \
+                    is expected to have {expected} sides but has {:?}",
+                    details.sides_per_region().get(tag)
+                );
+            });
+
             assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
         }
 
