@@ -227,3 +227,149 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
 
     Ok(res)
 }
+
+#[cfg(test)]
+mod tests {
+
+    mod it_computes {
+        use crate::day12::*;
+        use indoc::indoc;
+        #[test]
+        fn price_for_one_cell_garden() {
+            let garden = "Y";
+            let expected_price = 4;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_price_for_one_cell_garden() {
+            let garden = "Y";
+            let expected_price = 4;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_4x4_sample() {
+            let garden = indoc! {"
+                AAAA
+                BBCD
+                BBCC
+                EEEC"
+            };
+            let expected_price = 140;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_five_region_example() {
+            let garden = indoc! {"
+                OOOOO
+                OXOXO
+                OOOOO
+                OXOXO
+                OOOOO"
+            };
+            let expected_price = 772;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_larger_region_example() {
+            let garden = indoc! {"
+                RRRRIICCFF
+                RRRRIICCCF
+                VVRRRCCFFF
+                VVRCCCJFFF
+                VVVVCJJCFE
+                VVIVCCJJEE
+                VVIIICJJEE
+                MIIIIIJJEE
+                MIIISIJEEE
+                MMMISSJEEE"
+            };
+            let expected_price = 1930;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part1(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_4x4_sample() {
+            let garden = indoc! {"
+                AAAA
+                BBCD
+                BBCC
+                EEEC"
+            };
+            let expected_price = 80;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_price) ;
+        }
+
+        #[test]
+        fn bulk_discount_for_five_region_example() {
+            let garden = indoc! {"
+                OOOOO
+                OXOXO
+                OOOOO
+                OXOXO
+                OOOOO"
+            };
+            let expected_price = 436;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_e_shape_example() {
+            let garden = indoc! {"
+                EEEEE
+                EXXXX
+                EEEEE
+                EXXXX
+                EEEEE"
+            };
+            let expected_bulk_discount = 236;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_bulk_discount);
+        }
+
+        #[test]
+        fn bulk_discount_for_cross_middle_example() {
+            let garden = indoc! {"
+                AAAAAA
+                AAABBA
+                AAABBA
+                ABBAAA
+                ABBAAA
+                AAAAAA"
+            };
+            let expected_price = 368;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+        }
+
+       #[test]
+        fn bulk_discount_for_larger_region_example() {
+            let garden = indoc! {"
+                RRRRIICCFF
+                RRRRIICCCF
+                VVRRRCCFFF
+                VVRCCCJFFF
+                VVVVCJJCFE
+                VVIVCCJJEE
+                VVIIICJJEE
+                MIIIIIJJEE
+                MIIISIJEEE
+                MMMISSJEEE"
+            };
+            let expected_price = 1206;
+            let garden = parse_day12(&garden).unwrap();
+            assert_eq!(solve_part2(&garden).unwrap(), expected_price);
+        }
+
+    }
+}
