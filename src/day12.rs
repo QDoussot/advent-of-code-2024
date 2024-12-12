@@ -141,6 +141,15 @@ impl GardenDetails {
             fences_per_tag: fencing,
         }
     }
+
+    fn area_per_region<'a>(&'a self) -> impl Iterator<Item = (usize, usize)> + 'a {
+        self.tag_per_coord
+            .iter()
+            .map(|(coord, tag)| (tag, coord))
+            .into_group_map()
+            .into_iter()
+            .map(|(tag, coords)| (*tag, coords.len()))
+    }
 }
 
 #[aoc_generator(day12)]
@@ -154,17 +163,9 @@ fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
 fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let garden_details = GardenDetails::compute_from(&input);
 
-    // Gather each coords per tag
-    let area_per_tag = garden_details
-        .tag_per_coord
-        .into_iter()
-        .map(|(coord, tag)| (tag, coord))
-        .into_group_map()
-        .into_iter()
-        .map(|(tag, coords)| (tag, coords.len()));
-
     // Compute part perimeter * part area
-    let res = area_per_tag
+    let res = garden_details
+        .area_per_region()
         .map(|(tag, area)| garden_details.fences_per_tag[&tag].len() * area)
         .sum();
 
@@ -178,8 +179,8 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     // Generate a map of fences side tag
     let fencing: HashMap<_, _> = garden_details
         .fences_per_tag
-        .into_iter()
-        .map(|(tag, coords)| coords.into_iter().map(move |c| (c, tag)))
+        .iter()
+        .map(|(tag, coords)| coords.into_iter().map(move |c| (c, *tag)))
         .flatten()
         .collect();
 
@@ -223,15 +224,7 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     }
 
     // Compute the price number of regions sides
-    let area_per_tag = garden_details
-        .tag_per_coord
-        .into_iter()
-        .map(|(k, v)| (v, k))
-        .into_group_map()
-        .into_iter()
-        .map(|(tag, vec)| (tag, vec.len()));
-
-    let res: usize = area_per_tag
+    let res: usize = garden_details.area_per_region()
         .map(|(tag, area)| region_sides[&tag] * area)
         .sum();
 
