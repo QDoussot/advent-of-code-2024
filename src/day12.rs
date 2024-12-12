@@ -116,6 +116,33 @@ struct GardenDetails {
     fences_per_tag: HashMap<usize, Vec<Coord>>,
 }
 
+impl GardenDetails {
+    fn compute_from(garden: &TableField<char>) -> Self {
+        let mut connexe = HashMap::<Coord, usize>::new();
+        let mut fencing = HashMap::<usize, Vec<Coord>>::new();
+        let mut grp = 0;
+
+        // Fill connexity map starting from each cell
+        let bb = garden.definition_area();
+        for y in bb.ymin..bb.ymax {
+            for x in bb.xmin..bb.xmax {
+                let c = Coord(x, y);
+                if !connexe.contains_key(&c) {
+                    connexe.insert(c, grp);
+                    get_connexe(&c, grp, garden, &mut connexe, &mut fencing);
+                    grp += 1;
+                }
+            }
+        }
+
+        GardenDetails {
+            tag_per_coord: connexe,
+            bounding_box: *bb,
+            fences_per_tag: fencing,
+        }
+    }
+}
+
 #[aoc_generator(day12)]
 fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
     let parser = parser!([# char | "" / "\n"]);
@@ -125,28 +152,7 @@ fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
 
 #[aoc(day12, part1)]
 fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
-    let mut connexe = HashMap::<Coord, usize>::new();
-    let mut fencing = HashMap::<usize, Vec<Coord>>::new();
-    let mut grp = 0;
-
-    // Fill connexity map starting from each cell
-    let bb = input.definition_area();
-    for y in bb.ymin..bb.ymax {
-        for x in bb.xmin..bb.xmax {
-            let c = Coord(x, y);
-            if !connexe.contains_key(&c) {
-                connexe.insert(c, grp);
-                get_connexe(&c, grp, input, &mut connexe, &mut fencing);
-                grp += 1;
-            }
-        }
-    }
-
-    let garden_details = GardenDetails {
-        tag_per_coord: connexe,
-        bounding_box: *bb,
-        fences_per_tag: fencing,
-    };
+    let garden_details = GardenDetails::compute_from(&input);
 
     // Gather each coords per tag
     let coords_per_tag = garden_details
@@ -166,26 +172,7 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
 
 #[aoc(day12, part2)]
 fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
-    let mut connexe = HashMap::<Coord, usize>::new();
-    let mut fencing = HashMap::<usize, Vec<Coord>>::new();
-    let mut grp = 0;
-    let bb = input.definition_area();
-    for y in bb.ymin..bb.ymax {
-        for x in bb.xmin..bb.xmax {
-            let c = Coord(x, y);
-            if !connexe.contains_key(&c) {
-                connexe.insert(c, grp);
-                get_connexe(&c, grp, input, &mut connexe, &mut fencing);
-                grp += 1;
-            }
-        }
-    }
-
-    let garden_details = GardenDetails {
-        tag_per_coord: connexe,
-        bounding_box: *bb,
-        fences_per_tag: fencing,
-    };
+    let garden_details = GardenDetails::compute_from(&input);
 
     // Generate a map of fences side tag
     let fencing: HashMap<_, _> = garden_details
