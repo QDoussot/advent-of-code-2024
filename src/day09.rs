@@ -66,7 +66,7 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
         .collect::<Vec<_>>()
         != vec![true, false]
     {
-        if let Some(empty_pos, ) = input.iter().position(|block| block.is_none()) {
+        if let Some(empty_pos) = input.iter().position(|block| block.is_none()) {
             if let Some(tomove) = input.iter().rposition(|e| e.is_some()) {
                 input[empty_pos] = Some(input[tomove].unwrap());
                 input[tomove] = None;
