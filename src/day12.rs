@@ -150,6 +150,59 @@ impl GardenDetails {
             .into_iter()
             .map(|(tag, coords)| (*tag, coords.len()))
     }
+
+    fn sides_per_region(&self) -> HashMap<usize, usize> {
+
+        // Generate a map of fences side tag
+        let fencing: HashMap<_, _> = self
+            .fences_per_tag
+            .iter()
+            .map(|(tag, coords)| coords.into_iter().map(move |c| (c, *tag)))
+            .flatten()
+            .collect();
+
+        // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
+        let mut region_sides = HashMap::<usize, usize>::new();
+        for x in 0..(self.bounding_box.xmax * 3 + 2) {
+            if x % 3 != 2 {
+                let col_side_counts = (0..self.bounding_box.ymax)
+                    .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
+                    .dedup_by(|t1, t2| match (t1, t2) {
+                        (None, None) => true,
+                        (Some(t1), Some(t2)) => t1 == t2,
+                        _ => false,
+                    })
+                    .flatten()
+                    .counts();
+                col_side_counts.iter().for_each(|(tag, count)| {
+                    let new_count =
+                        region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
+                    region_sides.insert(**tag, new_count);
+                });
+            }
+        }
+
+        // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
+        for y in 0..(self.bounding_box.ymax * 3 + 2) {
+            if y % 3 != 2 {
+                let row_side_counts = (0..self.bounding_box.ymax)
+                    .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
+                    .dedup_by(|t1, t2| match (t1, t2) {
+                        (None, None) => true,
+                        (Some(t1), Some(t2)) => t1 == t2,
+                        _ => false,
+                    })
+                    .flatten()
+                    .counts();
+                row_side_counts.iter().for_each(|(tag, count)| {
+                    let new_count =
+                        region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
+                    region_sides.insert(**tag, new_count);
+                });
+            }
+        }
+        region_sides
+    }
 }
 
 #[aoc_generator(day12)]
@@ -176,55 +229,11 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
 fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let garden_details = GardenDetails::compute_from(&input);
 
-    // Generate a map of fences side tag
-    let fencing: HashMap<_, _> = garden_details
-        .fences_per_tag
-        .iter()
-        .map(|(tag, coords)| coords.into_iter().map(move |c| (c, *tag)))
-        .flatten()
-        .collect();
-
-    // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
-    let mut region_sides = HashMap::<usize, usize>::new();
-    for x in 0..(garden_details.bounding_box.xmax * 3 + 2) {
-        if x % 3 != 2 {
-            let col_side_counts = (0..garden_details.bounding_box.ymax)
-                .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
-                .dedup_by(|t1, t2| match (t1, t2) {
-                    (None, None) => true,
-                    (Some(t1), Some(t2)) => t1 == t2,
-                    _ => false,
-                })
-                .flatten()
-                .counts();
-            col_side_counts.iter().for_each(|(tag, count)| {
-                let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
-                region_sides.insert(**tag, new_count);
-            });
-        }
-    }
-
-    // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
-    for y in 0..(garden_details.bounding_box.ymax * 3 + 2) {
-        if y % 3 != 2 {
-            let row_side_counts = (0..garden_details.bounding_box.ymax)
-                .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
-                .dedup_by(|t1, t2| match (t1, t2) {
-                    (None, None) => true,
-                    (Some(t1), Some(t2)) => t1 == t2,
-                    _ => false,
-                })
-                .flatten()
-                .counts();
-            row_side_counts.iter().for_each(|(tag, count)| {
-                let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
-                region_sides.insert(**tag, new_count);
-            });
-        }
-    }
+    let region_sides = garden_details.sides_per_region();
 
     // Compute the price number of regions sides
-    let res: usize = garden_details.area_per_region()
+    let res: usize = garden_details
+        .area_per_region()
         .map(|(tag, area)| region_sides[&tag] * area)
         .sum();
 
