@@ -3,6 +3,7 @@ use derive_more::derive::{Add, Sub};
 #[derive(Debug, Copy, Clone, Add, Sub, Hash, PartialEq, Eq)]
 pub struct Coord(pub isize, pub isize);
 
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct BoundingBox {
     pub xmin: isize,
     pub xmax: isize,
