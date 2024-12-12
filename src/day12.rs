@@ -2,7 +2,7 @@ use eyre::eyre;
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use crate::space2d::Field;
+use crate::space2d::{BoundingBox, Field};
 use aoc_runner_derive::{aoc, aoc_generator};
 use eyre::Report;
 
@@ -128,6 +128,28 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
     Ok(res)
 }
 
+fn display_garden_with_fences(
+    input: &TableField<char>,
+    fencing: &HashMap<Coord,usize>,
+    bb: &BoundingBox,
+) {
+    for y in 0..bb.ymax * 3 + 1 {
+        for x in 0..bb.xmax * 3 + 1 {
+            if let Some(tag) = fencing.get(&Coord(x, y)) {
+                print!("{tag}")
+            } else if x % 3 == 2 && y % 3 == 2 {
+                print!(
+                    "{}",
+                    *input.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
+                );
+            } else {
+                print!(" ");
+            }
+        }
+        println!("");
+    }
+}
+
 #[aoc(day12, part2)]
 fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
     let mut connexe = HashMap::<Coord, usize>::new();
@@ -154,22 +176,7 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         .flatten()
         .collect();
 
-    // Display map with fences
-    for y in 0..bb.ymax * 3 + 1 {
-        for x in 0..bb.xmax * 3 + 1 {
-            if let Some(tag) = fencing.get(&Coord(x, y)) {
-                print!("{tag}")
-            } else if x % 3 == 2 && y % 3 == 2 {
-                print!(
-                    "{}",
-                    *input.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
-                );
-            } else {
-                print!(" ");
-            }
-        }
-        println!("");
-    }
+    display_garden_with_fences(&input, &fencing, &bb);
 
     // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
     let mut region_sides = HashMap::<usize, usize>::new();
