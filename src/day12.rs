@@ -155,16 +155,17 @@ fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
     let garden_details = GardenDetails::compute_from(&input);
 
     // Gather each coords per tag
-    let coords_per_tag = garden_details
+    let area_per_tag = garden_details
         .tag_per_coord
         .into_iter()
         .map(|(coord, tag)| (tag, coord))
         .into_group_map()
-        .into_iter();
+        .into_iter()
+        .map(|(tag, coords)| (tag, coords.len()));
 
     // Compute part perimeter * part area
-    let res = coords_per_tag
-        .map(|(tag, coords)| garden_details.fences_per_tag[&tag].len() * coords.len())
+    let res = area_per_tag
+        .map(|(tag, area)| garden_details.fences_per_tag[&tag].len() * area)
         .sum();
 
     Ok(res)
@@ -222,13 +223,16 @@ fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
     }
 
     // Compute the price number of regions sides
-    let res: usize = garden_details
+    let area_per_tag = garden_details
         .tag_per_coord
         .into_iter()
         .map(|(k, v)| (v, k))
         .into_group_map()
         .into_iter()
-        .map(|(tag, vec)| region_sides[&tag] * vec.len())
+        .map(|(tag, vec)| (tag, vec.len()));
+
+    let res: usize = area_per_tag
+        .map(|(tag, area)| region_sides[&tag] * area)
         .sum();
 
     Ok(res)
