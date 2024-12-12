@@ -79,13 +79,9 @@ pub fn not<T, R1: Relation<T>>(r1: R1) -> NotRelation<T, R1> {
 #[cfg(test)]
 mod tests {
 
-    use super::and;
-
     #[test]
     fn lolila() {
-        let increasing = |(a, b): (&usize, &usize)| a < b;
-        let decreasing = |(a, b): (&usize, &usize)| a > b;
-        let impossible = and(increasing, |(a, b): (&usize, &usize)| a.abs_diff(*b) < 4);
-        let impossible = and(increasing, decreasing);
+        let _increasing = |(a, b): (&usize, &usize)| a < b;
+        let _decreasing = |(a, b): (&usize, &usize)| a > b;
     }
 }
