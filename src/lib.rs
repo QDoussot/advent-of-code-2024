@@ -1,14 +1,14 @@
-mod day1;
-mod day2;
-mod day3;
+mod day01;
+mod day02;
+mod day03;
 mod relation;
 
-mod day4;
+mod day04;
 
 mod coord_iter;
-mod day5;
+mod day05;
 
-mod day6;
+mod day06;
 mod space2d;
 mod functional;
 
