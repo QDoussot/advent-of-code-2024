@@ -87,6 +87,28 @@ fn get_connexe(
         .for_each(|c| get_connexe(c, tag, ground, connexe_map, fences_per_tag));
 }
 
+fn display_garden_with_fences(
+    garden: &TableField<char>,
+    fencing: &HashMap<Coord,usize>,
+    bb: &BoundingBox,
+) {
+    for y in 0..bb.ymax * 3 + 1 {
+        for x in 0..bb.xmax * 3 + 1 {
+            if let Some(tag) = fencing.get(&Coord(x, y)) {
+                print!("{tag}")
+            } else if x % 3 == 2 && y % 3 == 2 {
+                print!(
+                    "{}",
+                    *garden.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
+                );
+            } else {
+                print!(" ");
+            }
+        }
+        println!("");
+    }
+}
+
 #[aoc_generator(day12)]
 fn parse_day12(input: &str) -> Result<ParsedInput, Report> {
     let parser = parser!([# char | "" / "\n"]);
@@ -126,28 +148,6 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
         .sum();
 
     Ok(res)
-}
-
-fn display_garden_with_fences(
-    garden: &TableField<char>,
-    fencing: &HashMap<Coord,usize>,
-    bb: &BoundingBox,
-) {
-    for y in 0..bb.ymax * 3 + 1 {
-        for x in 0..bb.xmax * 3 + 1 {
-            if let Some(tag) = fencing.get(&Coord(x, y)) {
-                print!("{tag}")
-            } else if x % 3 == 2 && y % 3 == 2 {
-                print!(
-                    "{}",
-                    *garden.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
-                );
-            } else {
-                print!(" ");
-            }
-        }
-        println!("");
-    }
 }
 
 #[aoc(day12, part2)]
