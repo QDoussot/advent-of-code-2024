@@ -87,9 +87,10 @@ fn get_connexe(
         .for_each(|c| get_connexe(c, tag, ground, connexe_map, fences_per_tag));
 }
 
+#[allow(dead_code)]
 fn display_garden_with_fences(
     garden: &TableField<char>,
-    fencing: &HashMap<Coord,usize>,
+    fencing: &HashMap<Coord, usize>,
     bb: &BoundingBox,
 ) {
     for y in 0..bb.ymax * 3 + 1 {
@@ -176,13 +177,10 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         .flatten()
         .collect();
 
-    display_garden_with_fences(&input, &fencing, &bb);
-
     // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
     let mut region_sides = HashMap::<usize, usize>::new();
     for x in 0..(bb.xmax * 3 + 2) {
         if x % 3 != 2 {
-            println!("{x}");
             let col_side_counts = (0..bb.ymax)
                 .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
                 .dedup_by(|t1, t2| match (t1, t2) {
@@ -192,7 +190,6 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
                 })
                 .flatten()
                 .counts();
-            println!("{col_side_counts:?}");
             col_side_counts.iter().for_each(|(tag, count)| {
                 let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
                 region_sides.insert(**tag, new_count);
@@ -203,7 +200,6 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
     // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
     for y in 0..(bb.ymax * 3 + 2) {
         if y % 3 != 2 {
-            println!("{y}");
             let row_side_counts = (0..bb.ymax)
                 .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
                 .dedup_by(|t1, t2| match (t1, t2) {
@@ -213,7 +209,6 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
                 })
                 .flatten()
                 .counts();
-            println!("{row_side_counts:?}");
             row_side_counts.iter().for_each(|(tag, count)| {
                 let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
                 region_sides.insert(**tag, new_count);
