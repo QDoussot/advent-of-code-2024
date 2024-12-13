@@ -11,15 +11,7 @@ use huparse::parse::Parse;
 use huparse::parser;
 
 #[derive(Debug, Copy, Clone, Add, Sub, Hash, PartialEq, Eq, Mul)]
-struct Position(usize, usize);
-
-impl Div<Position> for Position {
-    type Output = Position;
-
-    fn div(self, rhs: Position) -> Self::Output {
-        Position(self.0 / rhs.0, self.1 / rhs.1)
-    }
-}
+struct Position(i64, i64);
 
 #[derive(Debug, Copy, Clone, Add, Sub, Hash, PartialEq, Eq, Mul)]
 struct Play {
@@ -37,12 +29,12 @@ fn parse_day13(input: &str) -> Result<ParsedInput, Report> {
 Button A: X+%, Y+%
 Button B: X%, Y+%
 Prize: X=%, Y=%",
-        usize,
-        usize,
-        usize,
-        usize,
-        usize,
-        usize
+        i64,
+        i64,
+        i64,
+        i64,
+        i64,
+        i64
     ) | "\n\n"]);
 
     let res = parser.parse_top(&input)?;
@@ -57,7 +49,7 @@ Prize: X=%, Y=%",
     Ok(res)
 }
 
-fn find_token_nbr(play: &Play) -> Option<usize> {
+fn find_token_nbr(play: &Play) -> Option<i64> {
     // Literally follow the proposed algorithm
     // Fast to write, quite unefficient
     (0..100)
@@ -68,8 +60,8 @@ fn find_token_nbr(play: &Play) -> Option<usize> {
 }
 
 #[aoc(day13, part1)]
-fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
-    let res: usize = input
+fn solve_part1(input: &ParsedInput) -> Result<i64, String> {
+    let res: i64 = input
         .iter()
         .map(|p| find_token_nbr(p))
         .filter_map(|t| t)
@@ -82,30 +74,26 @@ fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
 // with
 //   a,b being integer 
 //   b,v,p being 2 dimensions integer 'vectors'
-fn compute_v(play: &Play) -> Option<usize> {
+fn compute_v(play: &Play) -> Option<i64> {
     let Play { a, b, p } = play;
-    let (v, rem) = if p.1 * a.0 >= p.0 * a.1 {
+    let (v, rem) = {
         let num = p.1 * a.0 - p.0 * a.1;
         let denum = b.1 * a.0 - b.0 * a.1;
-        (num / denum, num % denum)
-    } else {
-        let num = p.0 * a.1 - p.1 * a.0;
-        let denum = b.0 * a.1 - b.1 * a.0;
         (num / denum, num % denum)
     };
     (rem == 0).then_some(v)
 }
 
 // Compute u once v is found
-fn compute_u(play: &Play, v: usize) -> Option<usize> {
+fn compute_u(play: &Play, v: i64) -> Option<i64> {
     let Play { a, b, p } = play;
     let num = p.0 - v * b.0;
     (num % a.0 == 0).then_some(num / a.0)
 }
 
 #[aoc(day13, part2)]
-fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
-    let res: usize = input
+fn solve_part2(input: &ParsedInput) -> Result<i64, String> {
+    let res: i64 = input
         .iter()
         .map(|p| Play {
             a: p.a,
