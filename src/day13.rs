@@ -1,5 +1,4 @@
 use derive_more::Mul;
-use std::ops::Div;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use derive_more::Add;
