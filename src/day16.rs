@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 
 #[aoc_generator(day16)]
 fn parse_day16(input: &str) -> Vec<Vec<char>> {
@@ -39,11 +39,11 @@ fn move_or_rotate(curr_pos: Coord, curr_dir: usize, rot: usize) -> (Coord, usize
 fn find_path(map: &[Vec<char>]) -> Option<(Coord, usize, isize, PredMap)> {
     let (start, goal) = (find_entity(map, 'S')?, find_entity(map, 'E')?);
     let (init_dir, init_score) = (0usize, 0isize);
-    let mut stack = VecDeque::from([(start, init_dir, init_score)]);
+    let mut stack = BinaryHeap::from([(init_score, start, init_dir)]);
     let mut path_node = HashMap::from([((start, init_dir), init_score)]);
     let mut preds = PredMap::new();
 
-    while let Some((curr_pos, curr_dir, score)) = stack.pop_front() {
+    while let Some((score, curr_pos, curr_dir)) = stack.pop() {
         for (rot, cost) in [(3, -1000), (0, -1), (1, -1000)] {
             let next_node @ (next_pos, next_dir) = move_or_rotate(curr_pos, curr_dir, rot);
             let new_score = score + cost;
@@ -51,7 +51,7 @@ fn find_path(map: &[Vec<char>]) -> Option<(Coord, usize, isize, PredMap)> {
 
             if map[next_pos.1][next_pos.0] != '#' && Some(new_score) >= old_score {
                 if Some(new_score) > old_score && curr_pos != goal {
-                    stack.push_back((next_pos, next_dir, new_score));
+                    stack.push((new_score, next_pos, next_dir));
                 }
 
                 path_node.remove(&next_node);
