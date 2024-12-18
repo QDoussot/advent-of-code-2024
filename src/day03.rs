@@ -66,7 +66,7 @@ fn seek_and_sum_enabled_mul(input: &str) -> Result<usize, MulSumError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::day3::{seek_and_sum_enabled_mul, seek_and_sum_mul};
+    use crate::day03::{seek_and_sum_enabled_mul, seek_and_sum_mul};
 
     #[test]
     fn it_discard_number_with_more_than_3_digits() {
