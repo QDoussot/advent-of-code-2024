@@ -2,7 +2,7 @@ use eyre::eyre;
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use crate::space2d::Field;
+use crate::space2d::{BoundingBox, Field};
 use aoc_runner_derive::{aoc, aoc_generator};
 use eyre::Report;
 
@@ -87,74 +87,12 @@ fn get_connexe(
         .for_each(|c| get_connexe(c, tag, ground, connexe_map, fences_per_tag));
 }
 
-#[aoc_generator(day12)]
-fn parse_day12(input: &str) -> Result<ParsedInput, Report> {
-    let parser = parser!([# char | "" / "\n"]);
-    let table = parser.parse_top(input)?;
-    TableField::try_from(table).map_err(|_| eyre!(""))
-}
-
-#[aoc(day12, part1)]
-fn solve_part1(input: &ParsedInput) -> Result<usize, String> {
-    let mut connexe = HashMap::<Coord, usize>::new();
-    let mut fencing = HashMap::<usize, Vec<Coord>>::new();
-    let mut grp = 0;
-
-    // Fill connexity map starting from each cell
-    let bb = input.definition_area();
-    for y in bb.ymin..bb.ymax {
-        for x in bb.xmin..bb.xmax {
-            let c = Coord(x, y);
-            if !connexe.contains_key(&c) {
-                connexe.insert(c, grp);
-                get_connexe(&c, grp, input, &mut connexe, &mut fencing);
-                grp += 1;
-            }
-        }
-    }
-
-    // Gather each coords per tag
-    let coords_per_tag = connexe
-        .into_iter()
-        .map(|(coord, tag)| (tag, coord))
-        .into_group_map()
-        .into_iter();
-
-    // Compute part perimeter * part area
-    let res = coords_per_tag
-        .map(|(tag, coords)| fencing[&tag].len() * coords.len())
-        .sum();
-
-    Ok(res)
-}
-
-#[aoc(day12, part2)]
-fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
-    let mut connexe = HashMap::<Coord, usize>::new();
-    let mut fencing = HashMap::<usize, Vec<Coord>>::new();
-    let mut tag_letter = HashMap::<usize, char>::new();
-    let mut grp = 0;
-    let bb = input.definition_area();
-    for y in bb.ymin..bb.ymax {
-        for x in bb.xmin..bb.xmax {
-            let c = Coord(x, y);
-            if !connexe.contains_key(&c) {
-                tag_letter.insert(grp, *input.get(&c).unwrap());
-                connexe.insert(c, grp);
-                get_connexe(&c, grp, input, &mut connexe, &mut fencing);
-                grp += 1;
-            }
-            //
-        }
-    }
-    // Generate a map of fences side tag
-    let fencing: HashMap<_, _> = fencing
-        .into_iter()
-        .map(|(tag, coords)| coords.into_iter().map(move |c| (c, tag)))
-        .flatten()
-        .collect();
-
-    // Display map with fences
+#[allow(dead_code)]
+fn display_garden_with_fences(
+    garden: &TableField<char>,
+    fencing: &HashMap<Coord, usize>,
+    bb: &BoundingBox,
+) {
     for y in 0..bb.ymax * 3 + 1 {
         for x in 0..bb.xmax * 3 + 1 {
             if let Some(tag) = fencing.get(&Coord(x, y)) {
@@ -162,7 +100,7 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
             } else if x % 3 == 2 && y % 3 == 2 {
                 print!(
                     "{}",
-                    *input.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
+                    *garden.get(&Coord((x - 2) / 3, (y - 2) / 3)).unwrap_or(&'?')
                 );
             } else {
                 print!(" ");
@@ -170,58 +108,296 @@ fn solve_part2(input: &ParsedInput) -> Result<usize, String> {
         }
         println!("");
     }
+}
 
-    // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
-    let mut region_sides = HashMap::<usize, usize>::new();
-    for x in 0..(bb.xmax * 3 + 2) {
-        if x % 3 != 2 {
-            println!("{x}");
-            let col_side_counts = (0..bb.ymax)
-                .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
-                .dedup_by(|t1, t2| match (t1, t2) {
-                    (None, None) => true,
-                    (Some(t1), Some(t2)) => t1 == t2,
-                    _ => false,
-                })
-                .flatten()
-                .counts();
-            println!("{col_side_counts:?}");
-            col_side_counts.iter().for_each(|(tag, count)| {
-                let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
-                region_sides.insert(**tag, new_count);
-            });
+struct GardenDetails {
+    tag_per_coord: HashMap<Coord, usize>,
+    bounding_box: BoundingBox,
+    fences_per_tag: HashMap<usize, Vec<Coord>>,
+}
+
+impl GardenDetails {
+    fn compute_from(garden: &TableField<char>) -> Self {
+        let mut connexe = HashMap::<Coord, usize>::new();
+        let mut fencing = HashMap::<usize, Vec<Coord>>::new();
+        let mut grp = 0;
+
+        // Fill connexity map starting from each cell
+        let bb = garden.definition_area();
+        for y in bb.ymin..bb.ymax {
+            for x in bb.xmin..bb.xmax {
+                let c = Coord(x, y);
+                if !connexe.contains_key(&c) {
+                    connexe.insert(c, grp);
+                    get_connexe(&c, grp, garden, &mut connexe, &mut fencing);
+                    grp += 1;
+                }
+            }
+        }
+
+        GardenDetails {
+            tag_per_coord: connexe,
+            bounding_box: *bb,
+            fences_per_tag: fencing,
         }
     }
 
-    // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
-    for y in 0..(bb.ymax * 3 + 2) {
-        if y % 3 != 2 {
-            println!("{y}");
-            let row_side_counts = (0..bb.ymax)
-                .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
-                .dedup_by(|t1, t2| match (t1, t2) {
-                    (None, None) => true,
-                    (Some(t1), Some(t2)) => t1 == t2,
-                    _ => false,
-                })
-                .flatten()
-                .counts();
-            println!("{row_side_counts:?}");
-            row_side_counts.iter().for_each(|(tag, count)| {
-                let new_count = region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
-                region_sides.insert(**tag, new_count);
-            });
-        }
+    fn area_per_region<'a>(&'a self) -> impl Iterator<Item = (usize, usize)> + 'a {
+        self.tag_per_coord
+            .iter()
+            .map(|(coord, tag)| (tag, coord))
+            .into_group_map()
+            .into_iter()
+            .map(|(tag, coords)| (*tag, coords.len()))
     }
 
-    // Compute the price number of regions sides
-    let res: usize = connexe
-        .into_iter()
-        .map(|(k, v)| (v, k))
-        .into_group_map()
-        .into_iter()
-        .map(|(tag, vec)| region_sides[&tag] * vec.len())
+    fn sides_per_region(&self) -> HashMap<usize, usize> {
+
+        // Generate a map of fences side tag
+        let fencing: HashMap<_, _> = self
+            .fences_per_tag
+            .iter()
+            .map(|(tag, coords)| coords.into_iter().map(move |c| (c, *tag)))
+            .flatten()
+            .collect();
+
+        // Count, per tag, number of consecutives fence part (with same tag) for each (columns,side)
+        let mut region_sides = HashMap::<usize, usize>::new();
+        for x in 0..(self.bounding_box.xmax * 3 + 2) {
+            if x % 3 != 2 {
+                let col_side_counts = (0..self.bounding_box.ymax)
+                    .map(|y| fencing.get(&Coord(x, y * 3 + 2)))
+                    .dedup_by(|t1, t2| match (t1, t2) {
+                        (None, None) => true,
+                        (Some(t1), Some(t2)) => t1 == t2,
+                        _ => false,
+                    })
+                    .flatten()
+                    .counts();
+                col_side_counts.iter().for_each(|(tag, count)| {
+                    let new_count =
+                        region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
+                    region_sides.insert(**tag, new_count);
+                });
+            }
+        }
+
+        // Count, per tag, number of consecutives fence part (with same tag) for each (row,side)
+        for y in 0..(self.bounding_box.ymax * 3 + 2) {
+            if y % 3 != 2 {
+                let row_side_counts = (0..self.bounding_box.ymax)
+                    .map(|x| fencing.get(&Coord(x * 3 + 2, y)))
+                    .dedup_by(|t1, t2| match (t1, t2) {
+                        (None, None) => true,
+                        (Some(t1), Some(t2)) => t1 == t2,
+                        _ => false,
+                    })
+                    .flatten()
+                    .counts();
+                row_side_counts.iter().for_each(|(tag, count)| {
+                    let new_count =
+                        region_sides.remove_entry(*tag).map(|x| x.1).unwrap_or(0) + count;
+                    region_sides.insert(**tag, new_count);
+                });
+            }
+        }
+        region_sides
+    }
+}
+
+#[aoc_generator(day12)]
+fn parse_garden(input: &str) -> Result<ParsedInput, Report> {
+    let parser = parser!([# char | "" / "\n"]);
+    let table = parser.parse_top(input)?;
+    TableField::try_from(table).map_err(|_| eyre!(""))
+}
+
+#[aoc(day12, part1)]
+fn price_for_fences(input: &ParsedInput) -> Result<usize, String> {
+    let garden_details = GardenDetails::compute_from(&input);
+
+    // Compute part perimeter * part area
+    let res = garden_details
+        .area_per_region()
+        .map(|(tag, area)| garden_details.fences_per_tag[&tag].len() * area)
         .sum();
 
     Ok(res)
+}
+
+#[aoc(day12, part2)]
+fn bulk_discount_for_fences(input: &ParsedInput) -> Result<usize, String> {
+    let garden_details = GardenDetails::compute_from(&input);
+
+    let region_sides = garden_details.sides_per_region();
+
+    // Compute the price number of regions sides
+    let res: usize = garden_details
+        .area_per_region()
+        .map(|(tag, area)| region_sides[&tag] * area)
+        .sum();
+
+    Ok(res)
+}
+
+#[cfg(test)]
+mod tests {
+
+    mod it_computes {
+        use crate::day12::*;
+        use indoc::indoc;
+        #[test]
+        fn price_for_one_cell_garden() {
+            let garden = "Y";
+            let expected_price = 4;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_price_for_one_cell_garden() {
+            let garden = "Y";
+            let expected_price = 4;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_4x4_sample() {
+            let garden = indoc! {"
+                AAAA
+                BBCD
+                BBCC
+                EEEC"
+            };
+            let expected_price = 140;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_five_region_example() {
+            let garden = indoc! {"
+                OOOOO
+                OXOXO
+                OOOOO
+                OXOXO
+                OOOOO"
+            };
+            let expected_price = 772;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn price_for_larger_region_example() {
+            let garden = indoc! {"
+                RRRRIICCFF
+                RRRRIICCCF
+                VVRRRCCFFF
+                VVRCCCJFFF
+                VVVVCJJCFE
+                VVIVCCJJEE
+                VVIIICJJEE
+                MIIIIIJJEE
+                MIIISIJEEE
+                MMMISSJEEE"
+            };
+            let expected_price = 1930;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(price_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_4x4_sample() {
+            let garden = indoc! {"
+                AAAA
+                BBCD
+                BBCC
+                EEEC"
+            };
+            let expected_price = 80;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_five_region_example() {
+            let garden = indoc! {"
+                OOOOO
+                OXOXO
+                OOOOO
+                OXOXO
+                OOOOO"
+            };
+            let expected_price = 436;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_e_shape_example() {
+            let garden = indoc! {"
+                EEEEE
+                EXXXX
+                EEEEE
+                EXXXX
+                EEEEE"
+            };
+            let expected_bulk_discount = 236;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(
+                bulk_discount_for_fences(&garden).unwrap(),
+                expected_bulk_discount
+            );
+        }
+
+        #[test]
+        fn bulk_discount_for_cross_middle_example() {
+            let garden = indoc! {"
+                AAAAAA
+                AAABBA
+                AAABBA
+                ABBAAA
+                ABBAAA
+                AAAAAA"
+            };
+            let expected_price = 368;
+            let garden = parse_garden(&garden).unwrap();
+            let details = GardenDetails::compute_from(&garden);
+
+            let expected_sides = [(Coord(0, 0), 11), (Coord(3, 1), 4), (Coord(1, 3), 4)];
+            expected_sides.iter().for_each(|(c, expected)| {
+                let tag = details.tag_per_coord.get(&c).unwrap();
+                assert_eq!(
+                    details.sides_per_region().get(tag).unwrap(),
+                    expected,
+                    "Region containing {c:?} (tag = {tag}) \
+                    is expected to have {expected} sides but has {:?}",
+                    details.sides_per_region().get(tag)
+                );
+            });
+
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
+        }
+
+        #[test]
+        fn bulk_discount_for_larger_region_example() {
+            let garden = indoc! {"
+                RRRRIICCFF
+                RRRRIICCCF
+                VVRRRCCFFF
+                VVRCCCJFFF
+                VVVVCJJCFE
+                VVIVCCJJEE
+                VVIIICJJEE
+                MIIIIIJJEE
+                MIIISIJEEE
+                MMMISSJEEE"
+            };
+            let expected_price = 1206;
+            let garden = parse_garden(&garden).unwrap();
+            assert_eq!(bulk_discount_for_fences(&garden).unwrap(), expected_price);
+        }
+    }
 }
